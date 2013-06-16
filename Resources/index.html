@@ -1,18 +1,20 @@
 <html>
 <head>
+    <title>JIRA Time Logger</title>
     <script type="text/javascript" src="app://js/jquery.min.js"></script>
+    <script type="text/javascript" src="app://js/config.js"></script>
+    <script type="text/javascript" src="app://js/app.js"></script>
     <script type="text/javascript">
         $(document).ready(function() {
-            $('#test').text('jQuery Test');
+            App.getInstance().load();
         });
     </script>
 </head>
-    <body style="background-color:#1c1c1c;margin:0;">
-        <div style="border-top:1px solid #404040;">
-            <div style="color:#fff;padding:10px;">
-            Welcome to TideSDK Developer
-            <div id="test"></div>
-            </div>
-        </div>
+    <body>
+        <h3>JIRA Time Logger</h3>
+        <form id="loggerForm" method="POST">
+            <label for="time">Time</label> <input type="text" id="time" name="time" placeholder="The time to log (e.g. '1h 30m')" /><br />
+            <button>Submit</button>
+        </form>
     </body>
 </html>

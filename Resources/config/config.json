@@ -1,0 +1,8 @@
+{
+    "jira": {
+        "urlBase":  null,
+        "urlApi": "/rest/api/2/",
+        "username": null,
+        "password": null
+    }
+}
