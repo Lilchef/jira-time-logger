@@ -39,7 +39,6 @@ Config.prototype._loadJson = function()
     }
     customDocument.open(Ti.Filesystem.MODE_READ);
     this._json = JSON.parse(customDocument.read().toString());
-    console.log('LOADED: '+JSON.stringify(this._json))
 };
 
 /**
@@ -71,8 +70,6 @@ Config.prototype._registerFormListener = function()
             config.set($(this).attr('name'), $(this).val());
         });
         config.save();
-        // DEBUG
-        console.log('SAVED: '+JSON.stringify(config._json));
 
         window.location = 'app://index.html';
 

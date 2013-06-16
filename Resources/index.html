@@ -14,7 +14,11 @@
         <h3>JIRA Time Logger</h3>
         <form id="loggerForm" method="POST">
             <label for="time">Time</label> <input type="text" id="time" name="time" placeholder="The time to log (e.g. '1h 30m')" /><br />
-            <button>Submit</button>
+            <label for="time">Type of work</label> <select id="type" name="type">
+                <option value="">Main issue</option>
+            </select><br />
+            <button id="reconfigureButton" class="configuration">Reconfigure</button>
+            <button id="logTimeButton" class="constructive" type="submit">Log time</button>
         </form>
     </body>
 </html>

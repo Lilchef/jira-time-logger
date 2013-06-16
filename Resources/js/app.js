@@ -43,6 +43,62 @@ App.getInstance = function()
 App.prototype._config = null;
 
 /**
+ * Register a listener for the config form submission
+ * 
+ * @private
+ */
+App.prototype._registerReconfigureListener = function()
+{
+    $('#reconfigureButton').click(function() {
+        window.location = 'app://config.html';
+        // Prevent regular form submission
+        return false;
+    });
+};
+
+/**
+ * Register a listener for the main form submission
+ * 
+ * @private
+ */
+App.prototype._registerFormListener = function()
+{
+    // TODO
+};
+
+App.prototype._fetchSubTasks = function()
+{
+    // TODO: get these via REST
+    var subTypes = [
+        {
+            "name": "Sub-task"
+        },
+        {
+            "name": "Triaging"
+        },
+        {
+            "name": "Estimating"
+        },
+        {
+            "name": "Reviewing"
+        }
+    ];
+    
+    for (var key in subTypes) {
+        var name = subTypes[key].name;
+        $('#type').append('<option value="'+name+'">'+name+'</option>\n');
+    }
+}
+
+App.prototype._loadMain = function()
+{
+    this._registerReconfigureListener();
+    this._registerFormListener();
+    
+    this._fetchSubTasks();
+}
+
+/**
  * Initialise the app
  */
 App.prototype.init = function()
@@ -62,6 +118,7 @@ App.prototype.load = function()
     }
 
     // Default: Stay on index.
+    this._loadMain();
 };
 
 /**
