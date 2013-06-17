@@ -67,7 +67,15 @@ Config.prototype._registerFormListener = function()
 
         // No errors, update the config
         $('input', this).each(function() {
-            config.set($(this).attr('name'), $(this).val());
+            var name = $(this).attr('name');
+            var val = $(this).val();
+            if (name == 'urlBase') {
+                if (!val.match(/^http(s)?:\/\//)) {
+                    val = 'http://'+val;
+                }
+                val = val.replace(/\/$/, '');
+            }
+            config.set(name, val);
         });
         config.save();
 
