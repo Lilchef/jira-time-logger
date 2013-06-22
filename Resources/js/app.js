@@ -55,6 +55,34 @@ App.getInstance = function()
     return App._instance;
 };
 
+/**
+ * Alert the user to something (intrusive)
+ * 
+ * @param String message
+ * @static
+ */
+App.alertUser = function(message) {
+    // May replace this with something nicer in future
+    alert(message);
+};
+
+/**
+ * Notify the user of something (non-intrusive)
+ * 
+ * @param String message
+ * @static
+ */
+App.notifyUser = function(message) {
+    if ($('#notification').length == 0) {
+        $('body').append('<span id="notification" class="notification"></span>');
+    }
+    $('#notification').html(message)
+            .css({backgroundColor: '#5bb75b'})
+            .show()
+            .animate({backgroundColor: 'none'}, 1500)
+            .fadeOut(5000);
+};
+
 /*
  * Instances variables and functions
  */
@@ -99,7 +127,7 @@ App.prototype._registerFormListener = function()
         });
 
         if (errors.length > 0) {
-            alert(errors.join('\n'));
+            App.alertUser(errors.join('\n'));
             return false;
         }
 
@@ -204,7 +232,7 @@ App.prototype._makeRequest = function(urlSlug, data, type, success, failure)
 App.prototype._requestFailure = function(xhr, status, ex)
 {
     console.log('Request failure: '+status+', '+ex);
-    alert('ERROR: There was a problem communicating with JIRA');
+    App.alertUser('ERROR: There was a problem communicating with JIRA');
 }
 
 /**
@@ -275,11 +303,11 @@ App.prototype.logTime = function(time, issue, type, close, description)
         
         this._makeRequest(url, data, App.REQUEST_POST, function(data, status, xhr) {
             if (!data.id) {
-                alert('ERROR: no work log returned by JIRA');
+                App.alertUser('ERROR: no work log returned by JIRA');
                 return;
             }
             
-            alert(time+' was successfully logged against '+issue);
+            App.notifyUser(time+' was successfully logged against '+issue);
             window.location = 'app://index.html';
         });
     }
