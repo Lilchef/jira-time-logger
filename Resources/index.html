@@ -1,14 +1,6 @@
 <html>
 <head>
     <title>JIRA Time Logger</title>
-    <script type="text/javascript" src="app://js/jquery.min.js"></script>
-    <script type="text/javascript" src="app://js/config.js"></script>
-    <script type="text/javascript" src="app://js/app.js"></script>
-    <script type="text/javascript">
-        $(document).ready(function() {
-            App.getInstance().load();
-        });
-    </script>
 </head>
     <body>
         <h3>JIRA Time Logger</h3>
@@ -23,5 +15,15 @@
             <button id="reconfigureButton" class="configuration">Reconfigure</button>
             <button id="logTimeButton" class="constructive" type="submit">Log time</button>
         </form>
+        
+        <script type="text/javascript" src="app://js/jquery.min.js"></script>
+        <script type="text/javascript" src="app://js/jquery.base64.min.js"></script>
+        <script type="text/javascript" src="app://js/config.js"></script>
+        <script type="text/javascript" src="app://js/app.js"></script>
+        <script type="text/javascript">
+            $(document).ready(function() {
+                App.getInstance().load();
+            });
+        </script>
     </body>
 </html>

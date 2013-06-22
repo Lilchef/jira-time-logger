@@ -10,6 +10,8 @@
 
 /**
  * App class
+ * 
+ * @constructor
  */
 function App()
 {
@@ -19,16 +21,28 @@ function App()
  * Static variables and functions
  */
 
+/**
+ * @constant
+ */
 App.URL_LOG_WORK = 'issue/{issue}/worklog';
-
+/**
+ * @constant
+ */
 App.REQUEST_GET = 'GET';
+/**
+ * @constant
+ */
 App.REQUEST_POST = 'POST';
 
+/**
+ * @static
+ */
 App._instance = null;
 
 /**
  * Get the singleton instance
  * 
+ * @static
  * @returns App
  */
 App.getInstance = function()
@@ -45,6 +59,10 @@ App.getInstance = function()
  * Instances variables and functions
  */
 
+/**
+ * @type Config
+ * @private
+ */
 App.prototype._config = null;
 
 /**
@@ -86,17 +104,23 @@ App.prototype._registerFormListener = function()
         }
 
         // No errors, submit
-        var values = [];
+        var values = {};
         $('input, select, textarea', this).each(function() {
             values[$(this).attr('name')] = $(this).val();
         });
-        app.logTime.call(app, values);
+
+        app.logTime(values['time'], values['issue'], values['type'], values['close'], values['description']);
 
         // Prevent regular form submission
         return false;
     });
 };
 
+/**
+ * Fetch the sub-task types from JIRA
+ * 
+ * @private
+ */
 App.prototype._fetchSubTasks = function()
 {
     // TODO: get these via REST
@@ -121,6 +145,11 @@ App.prototype._fetchSubTasks = function()
     }
 }
 
+/**
+ * Load the main window
+ * 
+ * @private
+ */
 App.prototype._loadMain = function()
 {
     this._registerReconfigureListener();
@@ -129,46 +158,79 @@ App.prototype._loadMain = function()
     this._fetchSubTasks();
 }
 
-App.prototype._makeRequest = function(url, data, type, success, failure)
+/**
+ * 
+ * @param String url_slug The URL slug to make the request to 
+ * @param String data The data to send
+ * @param String type (Optional) The type of request, one of the App.REQUEST_* constants
+ * @param function success (Optional) Success callback
+ * @param function failure (Optional) Failure callback
+ * @private
+ */
+App.prototype._makeRequest = function(urlSlug, data, type, success, failure)
 {
-    url = url.replace(/^\//, '');
+    urlSlug = urlSlug.replace(/^\//, '');
     type = (type) ? type : App.REQUEST_GET;
     success = (success) ? success : function() {};
     failure = (failure) ? failure : this._requestFailure;
     
+    var urlFull = this.getConfig().get('urlBase')+this.getConfig().get('urlApi')+urlSlug;
+    var authBase64 = $.base64.encode(this.getConfig().get('username')+':'+this.getConfig().get('password'));
+    var headerAuth = 'Basic '+authBase64;
+
     $.ajax({
         type: type,
-        url: this.getConfig().get('urlBase')+this.getConfig().get('urlApi')+url,
+        url: urlFull,
         dataType: 'json',
         async: false,
-        username: this.getConfig().get('username'),
-        password: this.getConfig().get('password'),
-        data: data,
+        headers: {
+            'Authorization': headerAuth,
+            'Content-Type': 'application/json'
+        },
+        data: JSON.stringify(data),
         success: success,
         error: failure
     });
 }
 
-App.prototype._requestFailure = function(xhr, error, ex)
+/**
+ * Default refuest failure handler
+ * 
+ * @param jqXhr xhr
+ * @param String status
+ * @param String ex
+ * @private
+ */
+App.prototype._requestFailure = function(xhr, status, ex)
 {
-    console.log('Request failure: '+error);
-    alert('There was a problem communicating with JIRA');
+    console.log('Request failure: '+status+', '+ex);
+    alert('ERROR: There was a problem communicating with JIRA');
 }
 
 /**
  * Initialise the app
+ * 
+ * @public
  */
 App.prototype.init = function()
 {
     this._config = new Config();
     this._config.init();
+    
+    // Ensure console.log is defined
+    if (!console || !console.log) {
+        console.log = function() {}
+    }
 };
 
 /**
  * Decide what to load
+ * 
+ * @public
  */
 App.prototype.load = function()
 {
+    // If config needs setting
     if (!this._config.ready()) {
         window.location = 'app://config.html';
         return;
@@ -182,31 +244,45 @@ App.prototype.load = function()
  * Get the config
  * 
  * @returns Config
+ * @public
  */
 App.prototype.getConfig = function()
 {
     return this._config;
 };
 
-App.prototype.logTime = function(time, type, issue, close, description)
+/**
+ * Log time to JIRA
+ * 
+ * @param String time The time to log in JIRA time format (1d 1h 1m)
+ * @param String issue The JIRA issue key
+ * @param String type (Optional) The type of work done. Defaults to main task
+ * @param Boolean close (Optional) Should the issue / sub-task be closed? Default: false
+ * @param String description (Optional) Description of the work done
+ * @public
+ */
+App.prototype.logTime = function(time, issue, type, close, description)
 {
     if (!type) {
         var url = App.URL_LOG_WORK.replace('{issue}', issue);
+        var now = new Date();
         
         var data = {
-            "author": {
-                "name": this.getConfig().get('username'),
-            },
-            "updateAuthor": {
-                "name": this.getConfig().get('username'),
-            },
             "comment": description,
+            "started": now.toISOString().replace(/Z$/, '+0000'),
             "timeSpent": time
         };
         
-        this._makeRequest(url, data, App.REQUEST_POST, function() {
+        this._makeRequest(url, data, App.REQUEST_POST, function(data, status, xhr) {
+            if (!data.id) {
+                alert('ERROR: no work log returned by JIRA');
+                return;
+            }
+            
             alert(time+' was successfully logged against '+issue);
             window.location = 'app://index.html';
         });
     }
-}
+    
+    // TODO
+};
