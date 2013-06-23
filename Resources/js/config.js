@@ -9,11 +9,21 @@
 
 /**
  * Config class
+ * 
+ * @constructor
  */
 function Config()
 {
 }
 
+/*
+ * Instances variables and functions
+ */
+
+/**
+ * @type Object
+ * @private
+ */
 Config.prototype._json = {};
 
 /**
@@ -100,6 +110,7 @@ Config.prototype.init = function()
 /**
  * Check if the config is ready
  * 
+ * @return Boolean
  * @public
  */
 Config.prototype.ready = function()
@@ -131,9 +142,9 @@ Config.prototype.populateForm = function()
 /**
  * Get a config option
  * 
- * @public
  * @param String attribute
  * @returns String
+ * @public
  */
 Config.prototype.get = function(attribute)
 {
@@ -147,9 +158,9 @@ Config.prototype.get = function(attribute)
 /**
  * Set a config option
  * 
- * @public
  * @param String attribute
  * @param String value
+ * @public
  */
 Config.prototype.set = function(attribute, value)
 {
