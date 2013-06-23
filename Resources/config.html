@@ -3,22 +3,31 @@
     <head>
         <title>Configuration</title>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <script type="text/javascript" src="app://js/jquery.min.js"></script>
-        <script type="text/javascript" src="app://js/config.js"></script>
-        <script type="text/javascript" src="app://js/app.js"></script>
-        <script type="text/javascript">
-            $(document).ready(function() {
-                App.getInstance().getConfig().populateForm();
-            });
-        </script>
     </head>
     <body>
         <h3>Configuration</h3>
         <form id="configForm" method="POST">
-            <label for="urlBase">Base URL</label> <input type="text" id="urlBase" name="urlBase" placeholder="Your JIRA install's URL" /><br />
+            <label for="urlBase">JIRA URL</label> <input type="text" id="urlBase" name="urlBase" placeholder="Your JIRA install's URL" /><br />
             <label for="username">Username</label> <input type="text" id="username" name="username" placeholder="Your JIRA username" /><br />
             <label for="password">Password</label> <input type="password" id="password" name="password" placeholder="Your JIRA password" /><br />
             <button>Submit</button>
         </form>
+        
+        <script type="text/javascript" src="app://js/jquery.min.js"></script>
+        <script type="text/javascript" src="app://js/jquery.base64.min.js"></script>
+        <script type="text/javascript" src="app://js/jquery.color.min.js"></script>
+        <script type="text/javascript" src="app://js/config.js"></script>
+        <script type="text/javascript" src="app://js/app.js"></script>
+        <script type="text/javascript">
+            $(document).ready(function() {
+                try {
+                    App.getInstance().getConfig().populateForm();
+                } catch (exception) {
+                    console.log(exception);
+                    alert('A serious error ocurrred, the application will have to close');
+                    Ti.App.exit();
+                }
+            });
+        </script>
     </body>
 </html>

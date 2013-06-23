@@ -33,7 +33,9 @@ Config.prototype._json = {};
  */
 Config.prototype._loadJson = function()
 {
+    var baseDocument = Ti.Filesystem.getFile(Ti.Filesystem.getApplicationDirectory(),'Resources/config/config.json');
     var customDocument = Ti.Filesystem.getFile(Ti.Filesystem.getApplicationDataDirectory(),'/config/config.json');
+    
     // If the local config doesn't exist yet set it up
     if (!customDocument.exists()) {
         var destPath = customDocument.nativePath().split(Ti.Filesystem.getSeparator());
@@ -44,11 +46,35 @@ Config.prototype._loadJson = function()
             Ti.App.exit();
             return;
         }
-        var document = Ti.Filesystem.getFile(Ti.Filesystem.getApplicationDirectory(),'Resources/config/config.json');
-        document.copy(Ti.Filesystem.getApplicationDataDirectory()+'/config/config.json');
+        baseDocument.copy(Ti.Filesystem.getApplicationDataDirectory()+'/config/config.json');
+        
+        this._json = JSON.parse(customDocument.read().toString());
+        
+    // Otherwise compare it to the base config to see if anything's missing
+    } else {
+        this._json = JSON.parse(customDocument.read().toString());
+        
+        var baseJson = JSON.parse(baseDocument.read().toString());
+        var changes = false;
+        // TODO: this method expects there to only be two levels of config, make it recursive
+        for (var key in baseJson) {
+            if (!this._json[key]) {
+                this._json[key] = baseJson[key];
+                changes = true;
+                continue;
+            }
+            for (var subKey in baseJson[key]) {
+                if (!this._json[key][subKey]) {
+                    this._json[key][subKey] = baseJson[key][subKey];
+                    changes = true;
+                }
+            }
+        }
+        
+        if (changes) {
+            customDocument.write(JSON.stringify(this._json));
+        }
     }
-    customDocument.open(Ti.Filesystem.MODE_READ);
-    this._json = JSON.parse(customDocument.read().toString());
 };
 
 /**
@@ -63,15 +89,18 @@ Config.prototype._registerFormListener = function()
         var config = event.data.config;
         // Validtion
         var errors = [];
-        $('input', this).each(function() {
-            if (!$(this).val()) {
-                errors.push($(this).attr('name')+' cannot be blank');
-                return true;
-            }
-        });
+        if (!$('#urlBase').val().match(/^http(s)?:\/\/.+$/)) {
+            errors.push('\''+$('#urlBase').val()+'\' does not appear to be a valid URL (make sure it starts http(s))');
+        }
+        if ($('#username').val() == '') {
+            errors.push('Username cannot be blank');
+        }
+        if ($('#password').val() == '') {
+            errors.push('Password cannot be blank');
+        }
 
         if (errors.length > 0) {
-            alert(errors.join('\n'));
+            App.alertUser(errors.join('\n'));
             return false;
         }
 
@@ -79,17 +108,17 @@ Config.prototype._registerFormListener = function()
         $('input', this).each(function() {
             var name = $(this).attr('name');
             var val = $(this).val();
-            if (name == 'urlBase') {
-                if (!val.match(/^http(s)?:\/\//)) {
-                    val = 'http://'+val;
-                }
-                val = val.replace(/\/$/, '');
+            if (name == 'password') {
+                // Obfuscate the password
+                // Not great but its only stored locally so not a big security risk
+                val = $.base64.encode(val);
             }
             config.set(name, val);
         });
         config.save();
 
-        window.location = 'app://index.html';
+        // Done, ask the App to route
+        App.getInstance().load();
 
         // Prevent regular form submission
         return false;
@@ -103,6 +132,10 @@ Config.prototype._registerFormListener = function()
  */
 Config.prototype.init = function()
 {
+    if (!App) {
+        throw 'Config cannot function without App';
+    }
+    
     this._loadJson();
     this._registerFormListener();
 };
@@ -132,11 +165,10 @@ Config.prototype.ready = function()
 Config.prototype.populateForm = function()
 {
     for (var key in this._json.jira) {
-        if (this._json.jira[key]) {
-            $('#'+key).val(this._json.jira[key]);
+        if (this._json.jira[key] && $('#'+key).length == 1) {
+            $('#'+key).val(this.get(key));
         }
     }
-
 }
 
 /**
@@ -152,7 +184,12 @@ Config.prototype.get = function(attribute)
         throw 'Unknown config requested: '+attribute;
     }
 
-    return this._json.jira[attribute];
+    var val = this._json.jira[attribute];
+    if (attribute == 'password') {
+        val = $.base64.decode(val);
+    }
+
+    return val;
 };
 
 /**
@@ -175,10 +212,6 @@ Config.prototype.set = function(attribute, value)
 Config.prototype.save = function()
 {
     var customDocument = Ti.Filesystem.getFile(Ti.Filesystem.getApplicationDataDirectory(),'config/config.json');
-    if (!customDocument.exists()) {
-        var document = Ti.Filesystem.getFile(Ti.Filesystem.getApplicationDirectory(),'Resources/config/config.json');
-        document.copy(customDocument);
-    }
     customDocument.open(Ti.Filesystem.MODE_WRITE);
     customDocument.write(JSON.stringify(this._json));
 };

@@ -119,11 +119,11 @@ App.prototype._registerFormListener = function()
         var app = event.data.app;
         // Validtion
         var errors = [];
-        if (!$('#time').val().match(app.getConfig().get('timeRegex'))) {
-            errors.push($('#time').val()+' does not appear to be a valid JIRA time phrase');
+        if (!$('#time').val().match(new RegExp(app.getConfig().get('timeRegex')))) {
+            errors.push('\''+$('#time').val()+'\' does not appear to be a valid JIRA time phrase');
         }
-        if (!$('#issue').val().match(app.getConfig().get('issueKeyRegex'))) {
-            errors.push($('#issue').val()+' does not appear to be a valid JIRA issue key');
+        if (!$('#issue').val().match(new RegExp(app.getConfig().get('issueKeyRegex')))) {
+            errors.push('\''+$('#issue').val()+'\' does not appear to be a valid JIRA issue key');
         }
 
         if (errors.length > 0) {
@@ -171,7 +171,7 @@ App.prototype._fetchSubTasks = function()
         var name = subTypes[key].name;
         $('#type').append('<option value="'+name+'">'+name+'</option>\n');
     }
-}
+};
 
 /**
  * Load the main window
@@ -180,11 +180,17 @@ App.prototype._fetchSubTasks = function()
  */
 App.prototype._loadMain = function()
 {
+    // Check we're on the right page
+    if (window.location.pathname != '/index.html') {
+        window.location = 'app://index.html';
+        return;
+    }
+    
     this._registerReconfigureListener();
     this._registerFormListener();
     
     this._fetchSubTasks();
-}
+};
 
 /**
  * 
@@ -211,6 +217,7 @@ App.prototype._makeRequest = function(urlSlug, data, type, success, failure)
         url: urlFull,
         dataType: 'json',
         async: false,
+        context: this,
         headers: {
             'Authorization': headerAuth,
             'Content-Type': 'application/json'
@@ -219,7 +226,7 @@ App.prototype._makeRequest = function(urlSlug, data, type, success, failure)
         success: success,
         error: failure
     });
-}
+};
 
 /**
  * Default refuest failure handler
@@ -233,7 +240,7 @@ App.prototype._requestFailure = function(xhr, status, ex)
 {
     console.log('Request failure: '+status+', '+ex);
     App.alertUser('ERROR: There was a problem communicating with JIRA');
-}
+};
 
 /**
  * Initialise the app
@@ -242,13 +249,17 @@ App.prototype._requestFailure = function(xhr, status, ex)
  */
 App.prototype.init = function()
 {
-    this._config = new Config();
-    this._config.init();
+    if (!Config) {
+        throw 'App cannot function without Config';
+    }
     
     // Ensure console.log is defined
     if (!console || !console.log) {
         console.log = function() {}
     }
+    
+    this._config = new Config();
+    this._config.init();
 };
 
 /**
@@ -280,6 +291,27 @@ App.prototype.getConfig = function()
 };
 
 /**
+ * Reset the time logger form
+ * 
+ * @param Boolean full Reset all elements of the form. Defaults to intelligent reset.
+ * @public
+ */
+App.prototype.resetForm = function(full)
+{
+    if (full) {
+        $('#loggerForm').reset();
+        return;
+    }
+    
+    $('#time').val('');
+    $('#issue').val('');
+    $('#description').val('');
+    // Deliberately leaving type and close alone
+    
+    $('#time').focus();
+}
+
+/**
  * Log time to JIRA
  * 
  * @param String time The time to log in JIRA time format (1d 1h 1m)
@@ -308,7 +340,7 @@ App.prototype.logTime = function(time, issue, type, close, description)
             }
             
             App.notifyUser(time+' was successfully logged against '+issue);
-            window.location = 'app://index.html';
+            this.resetForm();
         });
         
         return;
