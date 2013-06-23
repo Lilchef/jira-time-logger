@@ -3,6 +3,8 @@
         "urlBase":  null,
         "urlApi": "/rest/api/2/",
         "username": null,
-        "password": null
+        "password": null,
+        "timeRegex": "/^([0-9]+d )?([0-9]+h )?([0-9]+m)?$/",
+        "issueKeyRegex": "/^[A-Z]{2}-[0-9]+$/"
     }
 }

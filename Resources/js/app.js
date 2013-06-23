@@ -119,12 +119,12 @@ App.prototype._registerFormListener = function()
         var app = event.data.app;
         // Validtion
         var errors = [];
-        $('input', this).each(function() {
-            if (!$(this).val()) {
-                errors.push($(this).attr('name')+' cannot be blank');
-                return true;
-            }
-        });
+        if (!$('#time').val().match(app.getConfig().get('timeRegex'))) {
+            errors.push($('#time').val()+' does not appear to be a valid JIRA time phrase');
+        }
+        if (!$('#issue').val().match(app.getConfig().get('issueKeyRegex'))) {
+            errors.push($('#issue').val()+' does not appear to be a valid JIRA issue key');
+        }
 
         if (errors.length > 0) {
             App.alertUser(errors.join('\n'));
@@ -310,6 +310,8 @@ App.prototype.logTime = function(time, issue, type, close, description)
             App.notifyUser(time+' was successfully logged against '+issue);
             window.location = 'app://index.html';
         });
+        
+        return;
     }
     
     // TODO
