@@ -24,6 +24,14 @@ function App()
 /**
  * @constant
  */
+App.URL_CREATE_ISSUE = 'issue';
+/**
+ * @constant
+ */
+App.URL_GET_ISSUE = 'issue/{issue}';
+/**
+ * @constant
+ */
 App.URL_LOG_WORK = 'issue/{issue}/worklog';
 /**
  * @constant
@@ -94,6 +102,18 @@ App.notifyUser = function(message) {
 App.prototype._config = null;
 
 /**
+ * @type Array
+ * @private
+ */
+App.prototype._subTaskTypes = [];
+
+/**
+ * @type Object
+ * @private
+ */
+App.prototype._ajaxValues = {};
+
+/**
  * Register a listener for the config form submission
  * 
  * @private
@@ -149,28 +169,19 @@ App.prototype._registerFormListener = function()
  * 
  * @private
  */
-App.prototype._fetchSubTasks = function()
+App.prototype._fetchSubTaskTypes = function()
 {
-    // TODO: get these via REST
-    var subTypes = [
-        {
-            "name": "Sub-task"
-        },
-        {
-            "name": "Triaging"
-        },
-        {
-            "name": "Estimating"
-        },
-        {
-            "name": "Reviewing"
-        }
-    ];
-    
-    for (var key in subTypes) {
-        var name = subTypes[key].name;
-        $('#type').append('<option value="'+name+'">'+name+'</option>\n');
+    if (!this._subTaskTypes || this._subTaskTypes.length == 0) {
+        // TODO: get these via REST
+        this._subTaskTypes = {
+            "5": "Sub-task",
+            "16": "Triaging",
+            "15": "Estimating",
+            "14": "Reviewing"
+        };
     }
+    
+    return this._subTaskTypes;
 };
 
 /**
@@ -189,13 +200,17 @@ App.prototype._loadMain = function()
     this._registerReconfigureListener();
     this._registerFormListener();
     
-    this._fetchSubTasks();
+    var subTaskTypes = this._fetchSubTaskTypes();
+    for (var id in subTaskTypes) {
+        var name = subTaskTypes[id];
+        $('#type').append('<option value="'+name+'">'+name+'</option>\n');
+    }
 };
 
 /**
  * 
  * @param String url_slug The URL slug to make the request to 
- * @param String data The data to send
+ * @param Object data The JSON data to send
  * @param String type (Optional) The type of request, one of the App.REQUEST_* constants
  * @param function success (Optional) Success callback
  * @param function failure (Optional) Failure callback
@@ -216,13 +231,14 @@ App.prototype._makeRequest = function(urlSlug, data, type, success, failure)
         type: type,
         url: urlFull,
         dataType: 'json',
+        // Make requests synchronously, this is important for process flow control
         async: false,
         context: this,
         headers: {
             'Authorization': headerAuth,
             'Content-Type': 'application/json'
         },
-        data: JSON.stringify(data),
+        data: data ? JSON.stringify(data) : '{}',
         success: success,
         error: failure
     });
@@ -240,6 +256,67 @@ App.prototype._requestFailure = function(xhr, status, ex)
 {
     console.log('Request failure: '+status+', '+ex);
     App.alertUser('ERROR: There was a problem communicating with JIRA');
+};
+
+App.prototype._createSubTask = function(issue, type)
+{
+    var url = App.URL_CREATE_ISSUE;
+    var now = new Date();
+
+    var data = {
+        "fields": {
+            "project":
+            {
+                "key": issue.substring(0,2)
+            },
+            "parent": {
+                "key": issue
+            },
+            "summary": type+' '+issue,
+            "description": type+' '+issue,
+            "issuetype": {
+                "name": type
+            }
+        }
+    };
+
+    this._makeRequest(url, data, App.REQUEST_POST, function(data) {
+        if (!data.key) {
+            App.alertUser('ERROR: no subtask key returned by JIRA');
+            return;
+        }
+        
+        this._ajaxValues.requestedSubTaskIssue = data.key;
+        App.notifyUser(this._ajaxValues.requestedSubTaskType+' sub-task was created on '+issue);
+    });
+}
+
+App.prototype._ensureIssueHasSubTask = function(issue, type)
+{
+    this._ajaxValues.requestedSubTaskType = type;
+    this._ajaxValues.requestedSubTaskIssue = null;
+    
+    // Get the details of the main issue
+    var url = App.URL_GET_ISSUE.replace('{issue}', issue)+'?expand=subtasks';
+    this._makeRequest(url, null, App.REQUEST_GET, function(data) {
+        if (!data.fields.subtasks) {
+            return;
+        }
+        for (var index in data.fields.subtasks) {
+            if (data.fields.subtasks[index].fields.issuetype.name == this._ajaxValues.requestedSubTaskType) {
+                this._ajaxValues.requestedSubTaskIssue = data.fields.subtasks[index].key;
+                return;
+            }
+        }
+    });
+
+    // If there wasn't a suitable subtask create one
+    if (!this._ajaxValues.requestedSubTaskIssue) {
+        // _createSubTask() will set _requestedSubTaskIssue
+        this._createSubTask(issue, type);
+    }
+    
+    return this._ajaxValues.requestedSubTaskIssue;
 };
 
 /**
@@ -324,27 +401,41 @@ App.prototype.resetForm = function(full)
 App.prototype.logTime = function(time, issue, type, close, description)
 {
     if (!type) {
-        var url = App.URL_LOG_WORK.replace('{issue}', issue);
-        var now = new Date();
+        this._makeTimeLogRequest(time, issue, description);
         
-        var data = {
-            "comment": description,
-            "started": now.toISOString().replace(/Z$/, '+0000'),
-            "timeSpent": time
-        };
-        
-        this._makeRequest(url, data, App.REQUEST_POST, function(data, status, xhr) {
-            if (!data.id) {
-                App.alertUser('ERROR: no work log returned by JIRA');
-                return;
-            }
-            
-            App.notifyUser(time+' was successfully logged against '+issue);
-            this.resetForm();
-        });
+        App.notifyUser(time+' was successfully logged against '+issue);
+        this.resetForm();
         
         return;
     }
     
-    // TODO
+    var subTaskIssue = this._ensureIssueHasSubTask(issue, type);
+    if (!subTaskIssue) {
+        return;
+    }
+    this._makeTimeLogRequest(time, subTaskIssue, description);
+
+    App.notifyUser(time+' was successfully logged against '+issue);
+    this.resetForm();
+};
+
+App.prototype._makeTimeLogRequest = function(time, issue, description)
+{
+    var url = App.URL_LOG_WORK.replace('{issue}', issue);
+    var now = new Date();
+
+    var data = {
+        "comment": description,
+        "started": now.toISOString().replace(/Z$/, '+0000'),
+        "timeSpent": time
+    };
+
+    this._makeRequest(url, data, App.REQUEST_POST, function(data) {
+        if (!data.id) {
+            App.alertUser('ERROR: no work log returned by JIRA');
+            return;
+        }
+    });
+
+    return;
 };
