@@ -41,6 +41,14 @@ App.REQUEST_GET = 'GET';
  * @constant
  */
 App.REQUEST_POST = 'POST';
+/**
+ * @constant
+ */
+App.LOG_INFO = 'INFO';
+/**
+ * @constant
+ */
+App.LOG_WARN = 'WARN';
 
 /**
  * @static
@@ -80,15 +88,14 @@ App.alertUser = function(message) {
  * @param String message
  * @static
  */
-App.notifyUser = function(message) {
-    if ($('#notification').length == 0) {
-        $('body').append('<span id="notification" class="notification"></span>');
-    }
-    $('#notification').html(message)
-            .css({backgroundColor: '#5bb75b'})
+App.notifyUser = function(message, level) {
+    level = (level) ? level : App.LOG_INFO;
+    
+    var userLog = $('<div class="userLog '+level.toLowerCase()+'">'+level+': '+message+'</div>');
+    $('#userLogContainer').prepend(userLog);
+    userLog.css({backgroundColor: '#5bb75b'})
             .show()
-            .animate({backgroundColor: 'none'}, 1500)
-            .fadeOut(5000);
+            .animate({backgroundColor: 'none'}, 1500);
 };
 
 /*
@@ -258,6 +265,14 @@ App.prototype._requestFailure = function(xhr, status, ex)
     App.alertUser('ERROR: There was a problem communicating with JIRA');
 };
 
+/**
+ * Create a subtask for an issue
+ * 
+ * @param String issue The JIRA issue key
+ * @param String type (Optional) The type of subtask
+ * @returns String They JIRA key of the new subtask
+ * @public
+ */
 App.prototype._createSubTask = function(issue, type)
 {
     var url = App.URL_CREATE_ISSUE;
@@ -291,6 +306,14 @@ App.prototype._createSubTask = function(issue, type)
     });
 }
 
+/**
+ * Make sure a given type of subtask exists for an issue
+ * 
+ * @param String issue The JIRA issue key
+ * @param String type (Optional) The type of subtask
+ * @returns String They JIRA key of the subtask
+ * @public
+ */
 App.prototype._ensureIssueHasSubTask = function(issue, type)
 {
     this._ajaxValues.requestedSubTaskType = type;
@@ -419,6 +442,14 @@ App.prototype.logTime = function(time, issue, type, close, description)
     this.resetForm();
 };
 
+/**
+ * Actually tog time to JIRA
+ * 
+ * @param String time The time to log in JIRA time format (1d 1h 1m)
+ * @param String issue The JIRA issue key
+ * @param String type (Optional) The type of work done. Defaults to main task
+ * @private
+ */
 App.prototype._makeTimeLogRequest = function(time, issue, description)
 {
     var url = App.URL_LOG_WORK.replace('{issue}', issue);

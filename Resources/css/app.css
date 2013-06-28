@@ -1,5 +1,19 @@
-span.notification
+h4
 {
-    padding: 10px;
-    color: green;
+    font-weight: normal;
+    margin: 10px 0 5px 0;
+}
+
+#userLogContainer
+{
+    width: 100%;
+    height: 150px;
+    overflow: auto;
+    border: solid 1px gray;
+}
+
+div.userLog
+{
+    padding: 5px;
+    font-size: 0.8em;
 }
