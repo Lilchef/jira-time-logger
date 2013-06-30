@@ -16,12 +16,16 @@
         <script type="text/javascript" src="app://js/jquery.min.js"></script>
         <script type="text/javascript" src="app://js/jquery.base64.min.js"></script>
         <script type="text/javascript" src="app://js/jquery.color.min.js"></script>
+        <script type="text/javascript" src="app://js/jira.js"></script>
         <script type="text/javascript" src="app://js/config.js"></script>
         <script type="text/javascript" src="app://js/app.js"></script>
         <script type="text/javascript">
             $(document).ready(function() {
                 try {
                     App.getInstance().getConfig().populateForm();
+                    App.getInstance().getConfig().registerSubmitListener(function() {
+                        App.getInstance().load();
+                    });
                 } catch (exception) {
                     console.log(exception);
                     alert('A serious error ocurrred, the application will have to close');

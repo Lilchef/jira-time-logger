@@ -17,7 +17,21 @@ function Config()
 }
 
 /*
- * Instances variables and functions
+ * Static variables and functions
+ */
+
+/**
+ * Alert the user to something (intrusive)
+ * 
+ * @param String message
+ * @static
+ */
+Config.alertUser = function(message) {
+    alert(message);
+};
+
+/*
+ * Instances variables
  */
 
 /**
@@ -25,6 +39,129 @@ function Config()
  * @private
  */
 Config.prototype._json = {};
+
+/**
+ * @type Array
+ * @private
+ */
+Config.prototype._submitListeners = [];
+
+/*
+ * Instance public methods
+ */
+
+/**
+ * Initialise
+ * 
+ * @public
+ */
+Config.prototype.init = function()
+{
+    this._loadJson();
+    this._registerFormListener();
+};
+
+/**
+ * Check if the config is ready
+ * 
+ * @return Boolean
+ * @public
+ */
+Config.prototype.ready = function()
+{
+    for (var key in this._json.jira) {
+        if (!this._json.jira[key]) {
+            return false;
+        }
+    }
+
+    return true;
+};
+
+/**
+ * Populate the configuration form
+ * 
+ * @public
+ */
+Config.prototype.populateForm = function()
+{
+    for (var key in this._json.jira) {
+        if (this._json.jira[key] && $('#'+key).length == 1) {
+            $('#'+key).val(this.get(key));
+        }
+    }
+};
+
+/**
+ * Register a listener for when the config page has been submitted
+ * 
+ * @param Function listener
+ * @throws Exception if something other than a Function is passed in
+ * @public
+ */
+Config.prototype.registerSubmitListener = function(listener)
+{
+    if (!(listener instanceof Function)) {
+        throw "Invalid argument: Config.registerSubmitListener() requires a callable function";
+    }
+    
+    this._submitListeners.push(listener);
+};
+
+/**
+ * Get a config option
+ * 
+ * @param String attribute
+ * @param String section
+ * @returns String
+ * @public
+ */
+Config.prototype.get = function(attribute, section)
+{
+    section = (section) ? section : 'jira';
+    
+    if (!this._json[section] || !this._json[section][attribute]) {
+        throw 'Unknown config requested: '+section+':'+attribute;
+    }
+
+    var val = this._json[section][attribute];
+    // If its password that's been requested decode it
+    if (attribute == 'password') {
+        val = $.base64.decode(val);
+    }
+
+    return val;
+};
+
+/**
+ * Set a config option
+ * 
+ * @param String attribute
+ * @param String value
+ * @param String section
+ * @public
+ */
+Config.prototype.set = function(attribute, value, section)
+{
+    section = (section) ? section : 'jira';
+    this._json[section][attribute] = value;
+};
+
+/**
+ * Save the config options
+ * 
+ * @public
+ */
+Config.prototype.save = function()
+{
+    var customDocument = Ti.Filesystem.getFile(Ti.Filesystem.getApplicationDataDirectory(),'config/config.json');
+    customDocument.open(Ti.Filesystem.MODE_WRITE);
+    customDocument.write(JSON.stringify(this._json));
+};
+
+/*
+ * Instance private methods
+ */
 
 /**
  * Load the JSON config
@@ -100,7 +237,7 @@ Config.prototype._registerFormListener = function()
         }
 
         if (errors.length > 0) {
-            App.alertUser(errors.join('\n'));
+            Config.alertUser(errors.join('\n'));
             return false;
         }
 
@@ -117,101 +254,15 @@ Config.prototype._registerFormListener = function()
         });
         config.save();
 
-        // Done, ask the App to route
-        App.getInstance().load();
+        // Done, notify listeners
+        if (config._submitListeners.length > 0) {
+            for (var count = 0; count < config._submitListeners.length; count++) {
+                var listener = config._submitListeners[count];
+                listener();
+            }
+        }
 
         // Prevent regular form submission
         return false;
     });
-};
-
-/**
- * Initialise
- * 
- * @public
- */
-Config.prototype.init = function()
-{
-    if (!App) {
-        throw 'Config cannot function without App';
-    }
-    
-    this._loadJson();
-    this._registerFormListener();
-};
-
-/**
- * Check if the config is ready
- * 
- * @return Boolean
- * @public
- */
-Config.prototype.ready = function()
-{
-    for (var key in this._json.jira) {
-        if (!this._json.jira[key]) {
-            return false;
-        }
-    }
-
-    return true;
-};
-
-/**
- * Populate the configuration form
- * 
- * @public
- */
-Config.prototype.populateForm = function()
-{
-    for (var key in this._json.jira) {
-        if (this._json.jira[key] && $('#'+key).length == 1) {
-            $('#'+key).val(this.get(key));
-        }
-    }
-}
-
-/**
- * Get a config option
- * 
- * @param String attribute
- * @returns String
- * @public
- */
-Config.prototype.get = function(attribute)
-{
-    if (!this._json.jira[attribute]) {
-        throw 'Unknown config requested: '+attribute;
-    }
-
-    var val = this._json.jira[attribute];
-    if (attribute == 'password') {
-        val = $.base64.decode(val);
-    }
-
-    return val;
-};
-
-/**
- * Set a config option
- * 
- * @param String attribute
- * @param String value
- * @public
- */
-Config.prototype.set = function(attribute, value)
-{
-    this._json.jira[attribute] = value;
-};
-
-/**
- * Save the config options
- * 
- * @public
- */
-Config.prototype.save = function()
-{
-    var customDocument = Ti.Filesystem.getFile(Ti.Filesystem.getApplicationDataDirectory(),'config/config.json');
-    customDocument.open(Ti.Filesystem.MODE_WRITE);
-    customDocument.write(JSON.stringify(this._json));
 };
