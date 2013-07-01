@@ -191,15 +191,24 @@ App.prototype.logTime = function(time, issue, subtask, close, description)
         return true;
     }
     
-    var subTaskIssue = this._jira.getIssueSubTask(issue, subtask);
+    // Subtask
+    // First check we're not already on a subtask
+    var parentIssue = this._jira.getParent(issue);
+    if (!parentIssue) {
+        parentIssue = issue;
+    } else {
+        App.notifyUser(issue+' is a sub-task of '+parentIssue);
+    }
+    
+    var subTaskIssue = this._jira.getIssueSubTask(parentIssue, subtask);
     if (!subTaskIssue) {
-        subTaskIssue = this._jira.createSubTask(issue, subtask);
+        subTaskIssue = this._jira.createSubTask(parentIssue, subtask);
         if (!subTaskIssue) {
             App.alertUser('No subtask key was returned by JIRA!');
             return false;
         }
         
-        App.notifyUser(subtask+' sub-task was created on '+issue);
+        App.notifyUser(subtask+' sub-task was created on '+parentIssue);
     }
     
     workLogID = this._jira.logTime(time, subTaskIssue, description);
@@ -208,7 +217,7 @@ App.prototype.logTime = function(time, issue, subtask, close, description)
         return false;
     }
 
-    App.notifyUser(time+' was successfully logged against '+issue);
+    App.notifyUser(time+' was successfully logged against '+subtask+' of '+parentIssue);
     
     if (close) {
         var issueToClose = '';
@@ -220,22 +229,35 @@ App.prototype.logTime = function(time, issue, subtask, close, description)
             issueToClose = issue;
             transition = this._config.get('mainTaskCloseTransition');            
         }
-        var transitionID = this._jira.getTransitionID(issueToClose, transition);
-        if (!transitionID) {
-            App.alertUser('Could not find '+transition+' transition in JIRA!');
-            return false;
-        }
-        
-        var transitionSuccess = this._jira.transitionIssue(issueToClose, transitionID);
-        if (!transitionSuccess) {
-            App.alertUser('Could not close '+issueToClose+' in JIRA!');
-            // Don't return here as this isn't serious enough a problem to stop
-        } else {
-            App.notifyUser(issueToClose+' was successfully resolved/closed');
-        }
+        this.resolveCloseIssue(issueToClose, transition);
     }
     
     this.resetForm();
+    return true;
+};
+
+/**
+ * Resolve or close an issue in Jira
+ * 
+ * @param String issue The JIRA issue key
+ * @param String transition The JIRA transition name
+ * @returns Boolean Success?
+ */
+App.prototype.resolveCloseIssue = function(issue, transition)
+{
+    var transitionID = this._jira.getTransitionID(issue, transition);
+    if (!transitionID) {
+        App.alertUser('Could not find '+transition+' transition in JIRA!');
+        return false;
+    }
+
+    var transitionSuccess = this._jira.transitionIssue(issue, transitionID);
+    if (!transitionSuccess) {
+        App.alertUser('Could not close '+issue+' in JIRA!');
+        return false;
+    }
+    
+    App.notifyUser(issue+' was successfully resolved/closed');
     return true;
 };
 
@@ -296,6 +318,13 @@ App.prototype._registerFormListener = function()
         var values = {};
         $('input, select, textarea', this).each(function() {
             values[$(this).attr('name')] = $(this).val();
+            if ($(this).attr('type') == 'checkbox') {
+                if ($(this).is(':checked')) {
+                    values[$(this).attr('name')] = true;
+                } else {
+                    values[$(this).attr('name')] = false;
+                }
+            }
         });
 
         app.logTime(values['time'], values['issue'], values['type'], values['close'], values['description']);

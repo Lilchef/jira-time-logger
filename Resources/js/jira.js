@@ -167,6 +167,28 @@ Jira.prototype.logTime = function(time, issue, description)
 };
 
 /**
+ * Get the key of the parent of a subtask
+ * 
+ * @param String issue The JIRA subtask issue key
+ * @returns String The parent issue key or null
+ */
+Jira.prototype.getParent = function(issue)
+{
+    this._ajaxValues.requestedSubTaskParent = null;
+    
+    // Get the details of the issue
+    var url = Jira.URL_GET_ISSUE.replace('{issue}', issue);
+    this._makeRequest(url, null, Jira.REQUEST_GET, function(data) {
+        if (!data.fields.parent) {
+            return;
+        }
+        this._ajaxValues.requestedSubTaskParent = data.fields.parent.key;
+    });
+    
+    return this._ajaxValues.requestedSubTaskParent;
+};
+
+/**
  * Make sure a given type of subtask exists for an issue
  * 
  * @param String issue The JIRA issue key
