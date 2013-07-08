@@ -70,6 +70,7 @@ App.alertUser = function(message) {
  * @static
  */
 App.notifyUser = function(message, level) {
+    message = message.replace(/\n/g, '; ');
     level = (level) ? level : App.LOG_INFO;
     var colour = (level == App.LOG_WARN) ? '#b75b5b' : '#5bb75b';
     
@@ -301,11 +302,14 @@ App.prototype._registerFormListener = function()
     $('#loggerForm').submit({"app": app}, function(event) {
         var app = event.data.app;
         // Validtion
+        $('#loggerForm li.warning').removeClass('warning');
         var errors = [];
-        if (!$('#time').val().match(new RegExp(app.getConfig().get('timeRegex')))) {
+        if (!$('#time').val().match(new RegExp(app.getConfig().get('timeRegex'))) || $('#time').val() == '') {
+            $('#time').parent().addClass('warning');
             errors.push('\''+$('#time').val()+'\' does not appear to be a valid JIRA time phrase');
         }
-        if (!$('#issue').val().match(new RegExp(app.getConfig().get('issueKeyRegex')))) {
+        if (!$('#issue').val().match(new RegExp(app.getConfig().get('issueKeyRegex'))) || $('#issue').val() == '') {
+            $('#issue').parent().addClass('warning');
             errors.push('\''+$('#issue').val()+'\' does not appear to be a valid JIRA issue key');
         }
 

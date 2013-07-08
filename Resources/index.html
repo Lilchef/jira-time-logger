@@ -16,13 +16,13 @@
             <div class="row">
                 <ul class="three columns">
                     <li class="field">
-                        <label for="time">Time</label>
+                        <label for="time">Time <sup>*</sup></label>
                     </li>
                     <li class="field">
-                        <label for="time">Type of work</label>
+                        <label for="time">Type of work <sup>*</sup></label>
                     </li>
                     <li class="field">
-                        <label for="issue">Issue</label>
+                        <label for="issue">Issue <sup>*</sup></label>
                     </li>
                     <li class="field">
                         <label for="close">Resolve/close issue/sub-task after time logged?</label>
@@ -82,7 +82,14 @@
                     <!-- JS will add items here -->
                 </div>
             </div>
-        </div>    
+        </div>
+        <div class="row">
+            <div class="six columns">
+                <div id="footer">
+                    &copy; Aaron Baker, <span id="copyYear">2013</span>. JIRA and the JIRA logo &copy; Atlassian, Inc.
+                </div>
+            </div>
+        </div>
         
         <script type="text/javascript" src="app://js/jquery.min.js"></script>
         <script type="text/javascript" src="app://js/jquery.base64.min.js"></script>
@@ -100,6 +107,9 @@
                     alert('A serious error ocurrred, the application will have to close');
                     Ti.App.exit();
                 }
+                
+                var date = new Date();
+                $('#copyYear').text(date.getFullYear());
             });
         </script>
     </body>

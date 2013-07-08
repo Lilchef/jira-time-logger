@@ -1,13 +1,32 @@
+body
+{
+    background-color: #EEE;
+}
+
+sup
+{
+    color: red;
+}
+
 #userLogContainer
 {
     width: 100%;
-    height: 150px;
+    height: 140px;
     overflow: auto;
     border: solid 1px gray;
+    background-color: white;
 }
 
 div.userLog
 {
     padding: 5px;
     font-size: 0.8em;
+}
+
+
+#footer
+{
+    width: 100%;
+    text-align: center;
+    font-size: 0.7em;
 }

@@ -16,9 +16,9 @@
 <width>500</width>
 <max-width>500</max-width>
 <min-width>500</min-width>
-<height>500</height>
-<max-height>500</max-height>
-<min-height>500</min-height>
+<height>600</height>
+<max-height>600</max-height>
+<min-height>600</min-height>
 <fullscreen>false</fullscreen>
 <resizable>false</resizable>
 <chrome scrollbars="false">true</chrome>

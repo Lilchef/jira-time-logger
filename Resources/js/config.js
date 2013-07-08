@@ -225,14 +225,18 @@ Config.prototype._registerFormListener = function()
     $('#configForm').submit({"config": config}, function(event) {
         var config = event.data.config;
         // Validtion
+        $('#configForm li.warning').removeClass('warning');
         var errors = [];
         if (!$('#urlBase').val().match(/^http(s)?:\/\/.+$/)) {
+            $('#urlBase').parent().addClass('warning');
             errors.push('\''+$('#urlBase').val()+'\' does not appear to be a valid URL (make sure it starts http(s))');
         }
         if ($('#username').val() == '') {
+            $('#username').parent().addClass('warning');
             errors.push('Username cannot be blank');
         }
         if ($('#password').val() == '') {
+            $('#password').parent().addClass('warning');
             errors.push('Password cannot be blank');
         }
 
