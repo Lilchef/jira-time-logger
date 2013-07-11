@@ -188,6 +188,11 @@ App.prototype.logTime = function(time, issue, subtask, close, description)
         }
         
         App.notifyUser(time+' was successfully logged against '+issue);
+        
+        if (close) {
+            this.resolveCloseIssue(issue, this._config.get('mainTaskCloseTransition'));
+        }
+        
         this.resetForm();
         return true;
     }
@@ -248,13 +253,13 @@ App.prototype.resolveCloseIssue = function(issue, transition)
 {
     var transitionID = this._jira.getTransitionID(issue, transition);
     if (!transitionID) {
-        App.alertUser('Could not find '+transition+' transition in JIRA!');
+        App.alertUser('Could not find '+transition+' transition in JIRA!\nCheck the ticket is in a resolve/closeable status.');
         return false;
     }
 
     var transitionSuccess = this._jira.transitionIssue(issue, transitionID);
     if (!transitionSuccess) {
-        App.alertUser('Could not close '+issue+' in JIRA!');
+        App.alertUser('Could not resolve/close '+issue+' in JIRA!');
         return false;
     }
     

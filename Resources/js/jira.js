@@ -304,12 +304,14 @@ Jira.prototype.transitionIssue = function(issue, transition)
  */
 Jira.prototype._makeRequest = function(urlSlug, data, type, success, failure)
 {   
+    var urlBase = this._config.get('urlBase').replace(/\/$/, '');
+    var urlApi = this._config.get('urlApi');
     urlSlug = urlSlug.replace(/^\//, '');
     type = (type) ? type : Jira.REQUEST_GET;
     success = (success) ? success : function() {};
     failure = (failure) ? failure : this._requestFailure;
     
-    var urlFull = this._config.get('urlBase')+this._config.get('urlApi')+urlSlug;
+    var urlFull = urlBase+urlApi+urlSlug;
     var authBase64 = $.base64.encode(this._config.get('username')+':'+this._config.get('password'));
     var headerAuth = 'Basic '+authBase64;
 
