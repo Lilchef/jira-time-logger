@@ -4,8 +4,8 @@
         "urlApi": "/rest/api/2/",
         "username": null,
         "password": null,
-        "timeRegex": "^([0-9]+[dD] )?([0-9]+[hH] )?([0-9]+[mM])?$",
-        "issueKeyRegex": "^[A-Z]{1,10}-[0-9]+$",
+        "timeRegex": "^([0-9]+[dD] ?)?([0-9]+[hH] ?)?([0-9]+[mM])?$",
+        "issueKeyRegex": "^[A-Za-z]{1,10}-[0-9]+$",
         "mainTaskCloseTransition": "Resolve",
         "subTaskCloseTransition": "Close"
     },

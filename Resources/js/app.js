@@ -388,7 +388,7 @@ App.prototype._registerFormListener = function()
             }
         });
 
-        app.logTime(values['time'], values['issue'], values['type'], values['close'], values['description']);
+        app.logTime(values['time'], values['issue'].toUpperCase(), values['type'], values['close'], values['description']);
 
         // Prevent regular form submission
         return false;
