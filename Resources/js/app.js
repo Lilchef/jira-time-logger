@@ -39,6 +39,8 @@ App.LOG_WARN = 'WARN';
  */
 App._instance = null;
 
+App._maxLogs = 1;
+
 /**
  * Get the singleton instance
  * 
@@ -83,6 +85,9 @@ App.notifyUser = function(message, level) {
     userLog.css({backgroundColor: colour})
             .show()
             .animate({backgroundColor: 'none'}, 1500);
+    if ($('.userLog').length > App._maxLogs) {
+        $('#userLogContainer :last-child').remove();
+    }
 };
 
 /*
@@ -128,6 +133,8 @@ App.prototype.init = function()
     this._config.init();
     
     this._jira = new Jira(this._config);
+    
+    App._maxLogs = this._config.get('maxLogs', 'jtl');
 };
 
 /**
@@ -322,6 +329,30 @@ App.prototype._registerBugListener = function()
  * 
  * @private
  */
+App.prototype._registerResetFormListener = function()
+{
+    $('#resetFormButton').click(function() {
+        App.getInstance().resetForm(true);
+    });
+};
+
+/**
+ * Register a listener for the Log Time button
+ * 
+ * @private
+ */
+App.prototype._registerLogTimeListener = function()
+{
+    $('#logTimeButton').click(function() {
+        $('#loggerForm').submit();
+    });
+};
+
+/**
+ * Register a listener for the main form submission
+ * 
+ * @private
+ */
 App.prototype._registerFormListener = function()
 {
     var app = this;
@@ -365,18 +396,6 @@ App.prototype._registerFormListener = function()
 };
 
 /**
- * Register a listener for the main form submission
- * 
- * @private
- */
-App.prototype._registerResetFormListener = function()
-{
-    $('#resetFormButton').click(function() {
-        App.getInstance().resetForm(true);
-    });
-};
-
-/**
  * Load the main window
  * 
  * @private
@@ -391,6 +410,7 @@ App.prototype._loadMain = function()
     
     this._registerReconfigureListener();
     this._registerFormListener();
+    this._registerLogTimeListener();
     this._registerResetFormListener();
     this._registerBugListener();
     this._setVersionInfo();
