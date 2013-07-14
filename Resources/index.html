@@ -8,7 +8,7 @@
     <body>
         <div class="row">
             <div class="six columns text-center">
-                <h3>JIRA Time Logger</h3>
+                <h3>JIRA Time Logger <span id="version">(v1)</span></h3>
             </div>
         </div>
 
@@ -46,7 +46,7 @@
                         <input type="text" id="issue" name="issue" class="text input" placeholder="The main issue key" />
                     </li>
                     <li class="field">
-                        <label class="checkbox checked" for="close">
+                        <label class="checkbox" id="closeLabel" for="close">
                             <input type="checkbox" id="close" name="close" />
                             <span></span> &nbsp;
                         </label>
@@ -57,16 +57,25 @@
                 </ul>
             </div>
             <div class="row">
-                <div class="one columns">
-                    <div class="small rounded pretty warning btn icon-left icon-cog">
-                        <a href="#" id="reconfigureButton">Reconfigure</a>
+                <div class="four columns">
+                    <div class="row">
+                        <div class="two columns">
+                            <div class="small rounded pretty warning btn icon-left icon-cog">
+                                <a href="#" id="reconfigureButton">Reconfigure</a>
+                            </div>
+                        </div>
+                        <div class="two columns">
+                            <div class="two column">
+                                <div class="small rounded pretty danger btn icon-left icon-cancel">
+                                    <a href="#" id="resetFormButton">Reset form</a>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="three columns">&nbsp;</div>
-                <div class="two columns">
-                    <div class="medium rounded pretty success btn icon-left icon-clock">
-                        <!--<a href="#" id="logTimeButton">Log time</a>-->
-                        <input type="submit" id="logTimeButton" value="Log time" />
+                <div class="two columns text-right">
+                    <div class="medium rounded pretty success btn icon-left icon-hourglass">
+                        <a href="#" id="logTimeButton">Log time</a>
                     </div>
                 </div>
             </div>
@@ -83,10 +92,13 @@
                 </div>
             </div>
         </div>
-        <div class="row">
-            <div class="six columns">
-                <div id="footer">
-                    &copy; Aaron Baker, <span id="copyYear">2013</span>. JIRA and the JIRA logo &copy; Atlassian, Inc.
+        <div class="row" id="footer">
+            <div class="four columns">
+                &copy; Aaron Baker, <span id="copyYear">2013</span>. JIRA and the JIRA logo &copy; Atlassian, Inc.
+            </div>
+            <div class="two columns text-right">
+                <div class="small rounded pretty primary btn icon-left icon-tools">
+                    <a href="#" id="bugButton">Report bug</a>
                 </div>
             </div>
         </div>

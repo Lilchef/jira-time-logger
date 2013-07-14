@@ -8,6 +8,11 @@ sup
     color: red;
 }
 
+#version
+{
+    font-size: 1rem;
+}
+
 #userLogContainer
 {
     width: 100%;
@@ -27,7 +32,5 @@ div.userLog
 
 #footer
 {
-    width: 100%;
-    text-align: center;
     font-size: 0.7em;
 }

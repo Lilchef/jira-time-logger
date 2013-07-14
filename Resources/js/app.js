@@ -15,6 +15,10 @@
  */
 function App()
 {
+    var version = 0.2;
+    this._getVersion = function() {
+        return version;
+    };
 }
 
 /*
@@ -152,7 +156,10 @@ App.prototype.load = function()
 App.prototype.resetForm = function(full)
 {
     if (full) {
-        $('#loggerForm').reset();
+        $('#loggerForm').get(0).reset();
+        if ($('#closeLabel').hasClass('checked')) {
+            $('#closeLabel').click();
+        }
         return;
     }
     
@@ -297,6 +304,20 @@ App.prototype._registerReconfigureListener = function()
 };
 
 /**
+ * Register a listener for the Bug Report button
+ * 
+ * @private
+ */
+App.prototype._registerBugListener = function()
+{
+    $('#bugButton').click(function() {
+        var email = 'bugs@aaronbaker.co.uk';
+        var subject = encodeURIComponent('JIRA Time Logger bug report');
+        Ti.Platform.openURL('mailto:'+email+'?subject='+subject);
+    });
+};
+
+/**
  * Register a listener for the main form submission
  * 
  * @private
@@ -344,6 +365,18 @@ App.prototype._registerFormListener = function()
 };
 
 /**
+ * Register a listener for the main form submission
+ * 
+ * @private
+ */
+App.prototype._registerResetFormListener = function()
+{
+    $('#resetFormButton').click(function() {
+        App.getInstance().resetForm(true);
+    });
+};
+
+/**
  * Load the main window
  * 
  * @private
@@ -358,8 +391,17 @@ App.prototype._loadMain = function()
     
     this._registerReconfigureListener();
     this._registerFormListener();
+    this._registerResetFormListener();
+    this._registerBugListener();
+    this._setVersionInfo();
     this._populateSubTaskTypes();
 };
+
+App.prototype._setVersionInfo = function()
+{
+    var version = this._getVersion();
+    $('#version').text('(v'+version+')');
+}
 
 /**
  * Populate the subtask types dropdown
