@@ -31,6 +31,9 @@
                     <li class="field">
                         <label for="password">Password <sup>*</sup></label>
                     </li>
+                    <li class="field">
+                        <label for="subTaskTypeExclusions">Subtask types to exclude (Comma-separated. Case-sensitive)</label>
+                    </li>
                 </ul>
                 <ul class="three columns">
                     <li class="field">
@@ -42,12 +45,14 @@
                     <li class="field">
                         <input type="password" id="password" name="password" class="password input" placeholder="Your JIRA password" />
                     </li>
+                    <li class="field">
+                        <textarea id="subTaskTypeExclusions" name="subTaskTypeExclusions" class="textarea input" placeholder="e.g. Sub-task, Reviewing"></textarea>
+                    </li>
                 </ul>
             </div>
             <div class="row">
                 <div class="six columns text-center">
                     <div class="medium rounded pretty success btn icon-left icon-check">
-                        <!--<a href="#" id="configureButton">Log time</a>-->
                         <input type="submit" id="configureButton" value="Submit" />
                     </div>
                 </div>

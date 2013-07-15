@@ -431,11 +431,14 @@ App.prototype._setVersionInfo = function()
 App.prototype._populateSubTaskTypes = function()
 {
     var subTaskTypes = this._jira.getSubTaskTypes();
+    $('#type').empty();
     if (!subTaskTypes) {
+        $('#type').append('<option value="ERROR">ERROR</option>\n');
         App.alertUser('Could not load subtask types from JIRA!');
         Ti.App.exit();
         return;
     }
+    $('#type').append('<option value="">Main Issue</option>\n');
     for (var id in subTaskTypes) {
         var name = subTaskTypes[id];
         $('#type').append('<option value="'+name+'">'+name+'</option>\n');

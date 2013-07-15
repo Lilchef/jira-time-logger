@@ -69,8 +69,9 @@ Config.prototype.init = function()
  */
 Config.prototype.ready = function()
 {
-    for (var key in this._json.jira) {
-        if (!this._json.jira[key]) {
+    var requiredConfigs = ["urlBase", "urlApi", "username", "password"];
+    for (var key in requiredConfigs) {
+        if (!this._json.jira[requiredConfigs[key]]) {
             return false;
         }
     }
@@ -87,7 +88,11 @@ Config.prototype.populateForm = function()
 {
     for (var key in this._json.jira) {
         if (this._json.jira[key] && $('#'+key).length == 1) {
-            $('#'+key).val(this.get(key));
+            var val = this.get(key);
+            if (val instanceof Array) {
+                val = val.join(', ');
+            }
+            $('#'+key).val(val);
         }
     }
 };
@@ -246,13 +251,21 @@ Config.prototype._registerFormListener = function()
         }
 
         // No errors, update the config
-        $('input', this).each(function() {
+        $('input, select, textarea', this).each(function() {
             var name = $(this).attr('name');
             var val = $(this).val();
-            if (name == 'password') {
-                // Obfuscate the password
-                // Not great but its only stored locally so not a big security risk
-                val = $.base64.encode(val);
+            if (!name) {
+                return true;
+            }
+            switch (name) {
+                case 'password':
+                    // Obfuscate the password
+                    // Not great but its only stored locally so not a big security risk
+                    val = $.base64.encode(val);
+                    break;
+                case 'subTaskTypeExclusions':
+                    val = val.replace(/,\s+/g, ',').split(',');
+                    break;
             }
             config.set(name, val);
         });

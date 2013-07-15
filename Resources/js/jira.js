@@ -39,6 +39,10 @@ Jira.URL_LOG_WORK = 'issue/{issue}/worklog';
 /**
  * @constant
  */
+Jira.URL_ISSUE_TYPES = 'issuetype';
+/**
+ * @constant
+ */
 Jira.URL_TRANSITION = 'issue/{issue}/transitions';
 /**
  * @constant
@@ -48,6 +52,18 @@ Jira.REQUEST_GET = 'GET';
  * @constant
  */
 Jira.REQUEST_POST = 'POST';
+/**
+ * @constant
+ */
+Jira.TYPES_INC_SUBTASKS_NO = 0;
+/**
+ * @constant
+ */
+Jira.TYPES_INC_SUBTASKS_ONLY = 1;
+/**
+ * @constant
+ */
+Jira.TYPES_INC_SUBTASKS_YES = 2;
 
 /*
  * Instance varaibles
@@ -57,7 +73,7 @@ Jira.REQUEST_POST = 'POST';
  * @type Array
  * @private
  */
-Jira.prototype._subTaskTypes = [];
+Jira.prototype._types = [];
 
 /**
  * @type Object
@@ -76,24 +92,60 @@ Jira.prototype._transitions = {};
  */
 
 /**
+ * Get the issue types from JIRA
+ * 
+ * @param Integer subtasks One of the Jira.TYPES_INC_SUBTASKS_* constants
+ * @return Object Issue/subtask types keyed by ID or null on failure
+ * @public
+ */
+Jira.prototype.getIssueTypes = function(subTasks)
+{
+    if (!this._types || this._types.length == 0) {
+        this._ajaxValues.types = null;
+        var data = {};
+        this._makeRequest(Jira.URL_ISSUE_TYPES, data, Jira.REQUEST_GET, function(data) {
+            if (data.length > 0) {
+                this._ajaxValues.types = [];
+                this._ajaxValues.types[Jira.TYPES_INC_SUBTASKS_NO] = {};
+                this._ajaxValues.types[Jira.TYPES_INC_SUBTASKS_ONLY] = {};
+                this._ajaxValues.types[Jira.TYPES_INC_SUBTASKS_YES] = {};
+                for (var index in data) {
+                    var typeID = data[index].id;
+                    var typeName = data[index].name;
+                    var key = Jira.TYPES_INC_SUBTASKS_NO;
+                    if (data[index].subtask) {
+                        key = Jira.TYPES_INC_SUBTASKS_ONLY;
+                        if ($.inArray(typeName, this._config.get('subTaskTypeExclusions')) >= 0) {
+                            continue;
+                        }
+                    }
+                    this._ajaxValues.types[key][typeID] = typeName;
+                    this._ajaxValues.types[Jira.TYPES_INC_SUBTASKS_YES][typeID] = typeName;
+                }
+            }
+        });
+        
+        this._types = this._ajaxValues.types;
+    }
+    
+    if (!this._types[subTasks]) {
+        return null;
+    }
+    
+    return this._types[subTasks];
+};
+
+/**
  * Get the sub-task types from JIRA
  * 
- * @public
+ * Helper method
+ * 
  * @return Object Subtask types keyed by ID or null on failure
+ * @public
  */
 Jira.prototype.getSubTaskTypes = function()
 {
-    if (!this._subTaskTypes || this._subTaskTypes.length == 0) {
-        // TODO: get these via REST
-        this._subTaskTypes = {
-            "5": "Sub-task",
-            "16": "Triaging",
-            "15": "Estimating",
-            "14": "Reviewing"
-        };
-    }
-    
-    return this._subTaskTypes;
+    return this.getIssueTypes(Jira.TYPES_INC_SUBTASKS_ONLY);
 };
 
 /**
