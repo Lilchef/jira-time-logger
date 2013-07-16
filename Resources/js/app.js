@@ -115,6 +115,12 @@ App.prototype._config = null;
 App.prototype._jira = null;
 
 /**
+ * @type Stopwatch
+ * @private
+ */
+App.prototype._stopwatch = null;
+
+/**
  * @type Integer
  * @private
  */
@@ -134,9 +140,6 @@ App.prototype.init = function()
     if (!Config) {
         throw 'App cannot function without Config';
     }
-    if (!Jira) {
-        throw 'App cannot function without Jira';
-    }
     
     // Ensure console.log is defined
     if (!console || !console.log) {
@@ -145,8 +148,6 @@ App.prototype.init = function()
     
     this._config = new Config();
     this._config.init();
-    
-    this._jira = new Jira(this._config);
     
     App._maxLogs = this._config.get('maxLogs', 'jtl');
 };
@@ -218,7 +219,7 @@ App.prototype.logTime = function(time, issue, subtask, close, description)
         }
         
         var notification = time+' was successfully logged against '+issue;
-        if (summary != '' && summary.indexOf(issue) < 0) {
+        if (summary != '' && summary.indexOf(issue) < 0 && summary.indexOf('...') < 0) {
             if (summary.length > App.LOG_MAX_SUMMARY_LENGTH) {
                 summary = summary.substring(0, App.LOG_MAX_SUMMARY_LENGTH)+'...';
             }
@@ -483,6 +484,18 @@ App.prototype._loadMain = function()
         return;
     }
     
+    // Check dependencies
+    if (!Jira) {
+        throw 'App cannot function without Jira';
+    }
+    if (!Stopwatch) {
+        throw 'App cannot function without Stopwatch';
+    }
+    
+    this._jira = new Jira(this._config);
+    
+    this._stopwatch = new Stopwatch();
+    
     this._registerReconfigureListener();
     this._registerFormListener();
     this._registerLogTimeListener();
@@ -491,6 +504,11 @@ App.prototype._loadMain = function()
     this._registerIssueKeyupListener();
     this._setVersionInfo();
     this._populateSubTaskTypes();
+    
+    this._stopwatch.registerMinListener(this._updateTime);
+    this._stopwatch.start();
+    this._updateTime(this._stopwatch.getTime());
+    
 };
 
 App.prototype._setVersionInfo = function()
@@ -519,4 +537,20 @@ App.prototype._populateSubTaskTypes = function()
         var name = subTaskTypes[id];
         $('#type').append('<option value="'+name+'">'+name+'</option>\n');
     }
+};
+
+/**
+ * Update the elapsed time
+ * 
+ * @param Object
+ */
+App.prototype._updateTime = function(time)
+{
+    var jiraTime = '';
+    if (time.hour) {
+        jiraTime = time.hour+'h ';
+    }
+    jiraTime += time.min+'m';
+    
+    $('#time').val(jiraTime);
 };
