@@ -16,7 +16,8 @@
 function App()
 {
     var version = 0.2;
-    this._getVersion = function() {
+    this._getVersion = function()
+    {
         return version;
     };
 }
@@ -33,12 +34,19 @@ App.LOG_INFO = 'INFO';
  * @constant
  */
 App.LOG_WARN = 'WARN';
+/**
+ * @constant
+ */
+App.LOG_MAX_SUMMARY_LENGTH = 20;
 
 /**
  * @static
  */
 App._instance = null;
 
+/**
+ * @static
+ */
 App._maxLogs = 1;
 
 /**
@@ -106,6 +114,12 @@ App.prototype._config = null;
  */
 App.prototype._jira = null;
 
+/**
+ * @type Integer
+ * @private
+ */
+App.prototype._issueTimeout = null;
+
 /*
  * Instances public methods
  */
@@ -162,6 +176,7 @@ App.prototype.load = function()
  */
 App.prototype.resetForm = function(full)
 {
+    $('#summary').html('&nbsp;');
     if (full) {
         $('#loggerForm').get(0).reset();
         if ($('#closeLabel').hasClass('checked')) {
@@ -192,6 +207,7 @@ App.prototype.resetForm = function(full)
 App.prototype.logTime = function(time, issue, subtask, close, description)
 {
     var workLogID = null;
+    var summary = $('#summary').text();
     
     // If no subtask assume main task
     if (!subtask) {
@@ -201,7 +217,14 @@ App.prototype.logTime = function(time, issue, subtask, close, description)
             return false;
         }
         
-        App.notifyUser(time+' was successfully logged against '+issue);
+        var notification = time+' was successfully logged against '+issue;
+        if (summary != '' && summary.indexOf(issue) < 0) {
+            if (summary.length > App.LOG_MAX_SUMMARY_LENGTH) {
+                summary = summary.substring(0, App.LOG_MAX_SUMMARY_LENGTH)+'...';
+            }
+            notification += ' ('+summary+')';
+        }
+        App.notifyUser(notification);
         
         if (close) {
             this.resolveCloseIssue(issue, this._config.get('mainTaskCloseTransition'));
@@ -213,11 +236,17 @@ App.prototype.logTime = function(time, issue, subtask, close, description)
     
     // Subtask
     // First check we're not already on a subtask
-    var parentIssue = this._jira.getParent(issue);
-    if (!parentIssue) {
+    var parentIssue = null;
+    var parentIssueDetails = this._jira.getParent(issue);
+    if (!parentIssueDetails) {
         parentIssue = issue;
     } else {
-        App.notifyUser(issue+' is a sub-task of '+parentIssue);
+        parentIssue = parentIssueDetails.key;
+        summary = parentIssueDetails.fields.summary;
+        if (summary.length > App.LOG_MAX_SUMMARY_LENGTH) {
+            summary = summary.substring(0, App.LOG_MAX_SUMMARY_LENGTH)+'...';
+        }
+        App.notifyUser(issue+' is a sub-task of '+parentIssue+' ('+summary+')');
     }
     
     var subTaskIssue = this._jira.getIssueSubTask(parentIssue, subtask);
@@ -228,7 +257,7 @@ App.prototype.logTime = function(time, issue, subtask, close, description)
             return false;
         }
         
-        App.notifyUser(subtask+' sub-task was created on '+parentIssue);
+        App.notifyUser(subtask+' sub-task ('+subTaskIssue+') was created against '+parentIssue);
     }
     
     workLogID = this._jira.logTime(time, subTaskIssue, description);
@@ -292,6 +321,17 @@ App.prototype.getConfig = function()
     return this._config;
 };
 
+/**
+ * Get the Jira instance
+ * 
+ * @returns Jira
+ * @public
+ */
+App.prototype.getJira = function()
+{
+    return this._jira;
+};
+
 /*
  * Instances private methods
  */
@@ -303,7 +343,8 @@ App.prototype.getConfig = function()
  */
 App.prototype._registerReconfigureListener = function()
 {
-    $('#reconfigureButton').click(function() {
+    $('#reconfigureButton').click(function()
+    {
         window.location = 'app://config.html';
         // Prevent regular form submission
         return false;
@@ -317,7 +358,8 @@ App.prototype._registerReconfigureListener = function()
  */
 App.prototype._registerBugListener = function()
 {
-    $('#bugButton').click(function() {
+    $('#bugButton').click(function()
+    {
         var email = 'bugs@aaronbaker.co.uk';
         var subject = encodeURIComponent('JIRA Time Logger bug report');
         Ti.Platform.openURL('mailto:'+email+'?subject='+subject);
@@ -331,7 +373,8 @@ App.prototype._registerBugListener = function()
  */
 App.prototype._registerResetFormListener = function()
 {
-    $('#resetFormButton').click(function() {
+    $('#resetFormButton').click(function()
+    {
         App.getInstance().resetForm(true);
     });
 };
@@ -343,7 +386,8 @@ App.prototype._registerResetFormListener = function()
  */
 App.prototype._registerLogTimeListener = function()
 {
-    $('#logTimeButton').click(function() {
+    $('#logTimeButton').click(function()
+    {
         $('#loggerForm').submit();
     });
 };
@@ -356,7 +400,8 @@ App.prototype._registerLogTimeListener = function()
 App.prototype._registerFormListener = function()
 {
     var app = this;
-    $('#loggerForm').submit({"app": app}, function(event) {
+    $('#loggerForm').submit({"app": app}, function(event)
+    {
         var app = event.data.app;
         // Validtion
         $('#loggerForm li.warning').removeClass('warning');
@@ -396,6 +441,36 @@ App.prototype._registerFormListener = function()
 };
 
 /**
+ * Register a listener for keyup on the issue field
+ * 
+ * @private
+ */
+App.prototype._registerIssueKeyupListener = function()
+{
+    $('#issue').keyup(function()
+    {
+        if (this._issueTimeout) {
+            clearTimeout(this._issueTimeout);
+        }
+        if (!$('#issue').val().match(new RegExp(App.getInstance().getConfig().get('issueKeyRegex'))) || $('#issue').val() == '') {
+            $('#summary').html('&nbsp;');
+            return;
+        }
+        $('#summary').text('Waiting...');
+        this._issueTimeout = setTimeout(function()
+        {
+            $('#summary').text('Checking...');
+            var issue = App.getInstance().getJira().getIssueSummary($('#issue').val());
+            if (issue && issue.fields.summary) {
+                $('#summary').text(issue.fields.summary);
+            } else {
+                $('#summary').text($('#issue').val()+' not found');
+            }
+        }, 500);
+    });
+};
+
+/**
  * Load the main window
  * 
  * @private
@@ -413,6 +488,7 @@ App.prototype._loadMain = function()
     this._registerLogTimeListener();
     this._registerResetFormListener();
     this._registerBugListener();
+    this._registerIssueKeyupListener();
     this._setVersionInfo();
     this._populateSubTaskTypes();
 };

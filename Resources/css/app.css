@@ -3,9 +3,24 @@ body
     background-color: #EEE;
 }
 
+form
+{
+    margin: 0px;
+}
+
 sup
 {
     color: red;
+}
+
+h3
+{
+    font-size: 1.8rem;
+}
+
+h4
+{
+    font-size: 1.2rem;
 }
 
 #version
@@ -13,13 +28,29 @@ sup
     font-size: 1rem;
 }
 
+#summary
+{
+    font-style: italic;
+    font-size: 0.8rem;
+    padding: 0px 5px;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+#closeLabel span
+{
+    top: 8px;
+}
+
 #userLogContainer
 {
     width: 100%;
     height: 140px;
-    overflow: auto;
+    overflow-x: hidden;
+    overflow-y: auto;
     border: solid 1px gray;
     background-color: white;
+    margin-bottom: 10px;
 }
 
 div.userLog
@@ -29,6 +60,10 @@ div.userLog
     line-height: 1em;
 }
 
+li.field
+{
+    margin-bottom: 5px;
+}
 
 #footer
 {

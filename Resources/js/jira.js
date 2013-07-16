@@ -219,10 +219,10 @@ Jira.prototype.logTime = function(time, issue, description)
 };
 
 /**
- * Get the key of the parent of a subtask
+ * Get the parent of a subtask
  * 
  * @param String issue The JIRA subtask issue key
- * @returns String The parent issue key or null
+ * @returns Object The parent issue null
  */
 Jira.prototype.getParent = function(issue)
 {
@@ -234,7 +234,7 @@ Jira.prototype.getParent = function(issue)
         if (!data.fields.parent) {
             return;
         }
-        this._ajaxValues.requestedSubTaskParent = data.fields.parent.key;
+        this._ajaxValues.requestedSubTaskParent = data.fields.parent;
     });
     
     return this._ajaxValues.requestedSubTaskParent;
@@ -338,6 +338,24 @@ Jira.prototype.transitionIssue = function(issue, transition)
     });
     
     return this._ajaxValues.transitionSuccess;
+};
+
+/**
+ * Get basic details of an issue
+ * 
+ * @param String issue The JIRA issue key
+ * @returns Object
+ */
+Jira.prototype.getIssueSummary = function(issue)
+{
+    // Get the details of the issue
+    this._ajaxValues.requestedIssue = null;
+    var url = Jira.URL_GET_ISSUE.replace('{issue}', issue)+'?fields=summary,description';
+    this._makeRequest(url, null, Jira.REQUEST_GET, function(data) {
+        this._ajaxValues.requestedIssue = data;
+    });
+    
+    return this._ajaxValues.requestedIssue;
 };
 
 /*
