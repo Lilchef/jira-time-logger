@@ -34,7 +34,17 @@
                 </ul>
                 <ul class="three columns">
                     <li class="field">
-                        <input type="text" id="time" name="time" class="text input" placeholder="e.g. '1h 30m'" />
+                        <div class="row">
+                            <div class="four columns">
+                        <div id='timeAuto' class="input" title="Click to override">0m</div>
+                        <input type="text" id="timeManual" name="time" class="text input" placeholder="e.g. '1h 30m'" />
+                            </div>
+                            <div class="two columns">
+                        <div class="small rounded pretty danger btn icon-left icon-cancel">
+                            <a href="#" id="clearTimeButton">Reset</a>
+                        </div>
+                            </div>
+                        </div>
                     </li>
                     <li class="field">
                         <div class="picker">
@@ -44,7 +54,7 @@
                         </div>
                     </li>
                     <li class="field">
-                        <input type="text" id="issue" name="issue" class="text input" placeholder="e.g. 'ABC-123'" />
+                        <input type="text" id="issue" name="issue" class="text wide input" placeholder="e.g. 'ABC-123'" />
                         <div id="summary">&nbsp;</div>
                     </li>
                     <li class="field">

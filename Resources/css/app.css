@@ -28,6 +28,19 @@ h4
     font-size: 1rem;
 }
 
+#timeAuto
+{
+    text-decoration: underline;
+    cursor: pointer;
+    background: none;
+    border: none;
+}
+
+#timeManual
+{
+    display: none;
+}
+
 #summary
 {
     font-style: italic;

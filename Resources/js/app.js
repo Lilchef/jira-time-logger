@@ -126,6 +126,12 @@ App.prototype._stopwatch = null;
  */
 App.prototype._issueTimeout = null;
 
+/**
+ * @type Boolean
+ * @private
+ */
+App.prototype._timeManual = false;
+
 /*
  * Instances public methods
  */
@@ -312,6 +318,59 @@ App.prototype.resolveCloseIssue = function(issue, transition)
 };
 
 /**
+ * Update the elapsed time
+ * 
+ * @param Object hour, min, sec
+ * @public
+ */
+App.prototype.updateTime = function(time)
+{
+    var jiraTime = '';
+    if (time.hour) {
+        jiraTime = time.hour+'h ';
+    }
+    jiraTime += time.min+'m';
+    
+    $('#timeAuto').text(jiraTime);
+};
+
+/**
+ * Get the time to log
+ * 
+ * @returns String
+ */
+App.prototype.getTimeToLog = function()
+{
+    if (this._timeManual) {
+        return $('#timeManual').val();
+    } else {
+        return $('#timeAuto').text();
+    }
+};
+
+/**
+ * Set whether to use manually entered time
+ * 
+ * @param Boolean manual
+ * @public
+ */
+App.prototype.setTimeManual = function(manual)
+{
+    this._timeManual = Boolean(manual);
+};
+
+/**
+ * Get whether to use manually entered time
+ * 
+ * @return Boolean manual
+ * @public
+ */
+App.prototype.getTimeManual = function(manual)
+{
+    return this._timeManual;
+};
+
+/**
  * Get the config
  * 
  * @returns Config
@@ -331,6 +390,17 @@ App.prototype.getConfig = function()
 App.prototype.getJira = function()
 {
     return this._jira;
+};
+
+/**
+ * Get the stopwatch
+ * 
+ * @returns Stopwatch
+ * @public
+ */
+App.prototype.getStopwatch = function()
+{
+    return this._stopwatch;
 };
 
 /*
@@ -434,10 +504,49 @@ App.prototype._registerFormListener = function()
             }
         });
 
-        app.logTime(values['time'], values['issue'].toUpperCase(), values['type'], values['close'], values['description']);
+        app.logTime(app.getTimeToLog(), values['issue'].toUpperCase(), values['type'], values['close'], values['description']);
 
         // Prevent regular form submission
         return false;
+    });
+};
+
+/**
+ * Register a listener for clicks on the time field
+ * 
+ * @private
+ */
+App.prototype._registerTimeClickListener = function()
+{
+    var app = this;
+    $('#timeAuto').click({"app": app}, function()
+    {
+        $(this).hide();
+        $('#timeManual').show();
+        $('#clearTimeButton').text('Cancel');
+        app.setTimeManual(true);
+    });
+};
+
+/**
+ * Register a listener for clicks on the clear time button
+ * 
+ * @private
+ */
+App.prototype._registerTimeClearListener = function()
+{
+    var app = this;
+    $('#clearTimeButton').click({"app": app}, function()
+    {
+        if (app.getTimeManual()) {
+            $('#timeManual').val('').hide();
+            $('#timeAuto').show();
+            $(this).text('Reset');
+            app.setTimeManual(false);
+        } else {
+            app.getStopwatch().stop(true).start();
+            app.updateTime(app.getStopwatch().getTime());
+        }
     });
 };
 
@@ -496,18 +605,20 @@ App.prototype._loadMain = function()
     
     this._stopwatch = new Stopwatch();
     
-    this._registerReconfigureListener();
     this._registerFormListener();
     this._registerLogTimeListener();
     this._registerResetFormListener();
+    this._registerReconfigureListener();
     this._registerBugListener();
+    this._registerTimeClickListener();
+    this._registerTimeClearListener();
     this._registerIssueKeyupListener();
     this._setVersionInfo();
     this._populateSubTaskTypes();
     
-    this._stopwatch.registerMinListener(this._updateTime);
+    this._stopwatch.registerMinListener(this.updateTime);
     this._stopwatch.start();
-    this._updateTime(this._stopwatch.getTime());
+    this.updateTime(this._stopwatch.getTime());
     
 };
 
@@ -537,20 +648,4 @@ App.prototype._populateSubTaskTypes = function()
         var name = subTaskTypes[id];
         $('#type').append('<option value="'+name+'">'+name+'</option>\n');
     }
-};
-
-/**
- * Update the elapsed time
- * 
- * @param Object
- */
-App.prototype._updateTime = function(time)
-{
-    var jiraTime = '';
-    if (time.hour) {
-        jiraTime = time.hour+'h ';
-    }
-    jiraTime += time.min+'m';
-    
-    $('#time').val(jiraTime);
 };

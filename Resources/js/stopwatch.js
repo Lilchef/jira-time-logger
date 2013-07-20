@@ -98,6 +98,7 @@ Stopwatch.prototype.registerHourListener = function(listener)
 /**
  * Start the clock
  * 
+ * @return Stopwatch Fluent interface
  * @public
  */
 Stopwatch.prototype.start = function()
@@ -116,12 +117,15 @@ Stopwatch.prototype.start = function()
         },
         1000
     );
+        
+    return this;
 };
 
 /**
  * Stop the clock
  * 
  * @param Boolean reset (Optional) Reset the time?
+ * @return Stopwatch Fluent interface
  * @public
  */
 Stopwatch.prototype.stop = function(reset)
@@ -130,14 +134,18 @@ Stopwatch.prototype.stop = function(reset)
         return;
     }
     clearInterval(this._interval);
+    this._interval = null;
     if (reset) {
         this.reset();
     }
+    
+    return this;
 };
 
 /**
  * Reset the clock
  * 
+ * @return Stopwatch Fluent interface
  * @public
  */
 Stopwatch.prototype.reset = function()
@@ -147,6 +155,8 @@ Stopwatch.prototype.reset = function()
         "min": 0,
         "hour": 0
     };
+    
+    return this;
 };
 
 /**
