@@ -15,10 +15,27 @@
  */
 function App()
 {
-    var version = 0.2;
+    var version = Ti.App.getVersion();
+    var bugReportEmail = 'bugs@aaronbaker.co.uk';
+    
+    /**
+     * Get the version number of the app
+     * 
+     * @private
+     */
     this._getVersion = function()
     {
         return version;
+    };
+    
+    /**
+     * Get the email address to send bug reports to
+     * 
+     * @private
+     */
+    this._getBugReportEmail = function()
+    {
+        return bugReportEmail;
     };
 }
 
@@ -456,9 +473,9 @@ App.prototype._registerReconfigureListener = function()
  */
 App.prototype._registerBugListener = function()
 {
-    $('#bugButton').click(function()
+    var email = this._getBugReportEmail();
+    $('#bugButton').click({"email": email}, function()
     {
-        var email = 'bugs@aaronbaker.co.uk';
         var subject = encodeURIComponent('JIRA Time Logger bug report');
         Ti.Platform.openURL('mailto:'+email+'?subject='+subject);
     });
