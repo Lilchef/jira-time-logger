@@ -71,7 +71,8 @@ App.getInstance = function()
  * @param String message
  * @static
  */
-App.alertUser = function(message) {
+App.alertUser = function(message)
+{
     alert(message);
     App.notifyUser(message, App.LOG_WARN);
 };
@@ -83,7 +84,8 @@ App.alertUser = function(message) {
  * @param String level One of the App.LOG_* constants
  * @static
  */
-App.notifyUser = function(message, level) {
+App.notifyUser = function(message, level)
+{
     message = message.replace(/\n/g, '; ');
     level = (level) ? level : App.LOG_INFO;
     var colour = (level == App.LOG_WARN) ? '#b75b5b' : '#5bb75b';
@@ -96,6 +98,19 @@ App.notifyUser = function(message, level) {
     if ($('.userLog').length > App._maxLogs) {
         $('#userLogContainer :last-child').remove();
     }
+};
+
+/**
+ * Format an issue key for entry in the activity log
+ * 
+ * Makes it clickable for easy re-use
+ * 
+ * @param String JIRA issue key
+ * @returns String
+ */
+App.formatIssueKeyForLog = function(issue)
+{
+    return '<a href="#" class="issueKey" title="Click to use as current issue">'+issue+'</a>';
 };
 
 /*
@@ -222,7 +237,7 @@ App.prototype.logTime = function(time, issue, subtask, close, description)
             return false;
         }
         
-        var notification = time+' was successfully logged against '+issue;
+        var notification = time+' was successfully logged against '+App.formatIssueKeyForLog(issue);
         if (summary != '' && summary.indexOf(issue) < 0 && summary.indexOf('...') < 0) {
             if (summary.length > App.LOG_MAX_SUMMARY_LENGTH) {
                 summary = summary.substring(0, App.LOG_MAX_SUMMARY_LENGTH)+'...';
@@ -251,7 +266,7 @@ App.prototype.logTime = function(time, issue, subtask, close, description)
         if (summary.length > App.LOG_MAX_SUMMARY_LENGTH) {
             summary = summary.substring(0, App.LOG_MAX_SUMMARY_LENGTH)+'...';
         }
-        App.notifyUser(issue+' is a sub-task of '+parentIssue+' ('+summary+')');
+        App.notifyUser(App.formatIssueKeyForLog(issue)+' is a sub-task of '+App.formatIssueKeyForLog(parentIssue)+' ('+summary+')');
     }
     
     var subTaskIssue = this._jira.getIssueSubTask(parentIssue, subtask);
@@ -262,7 +277,7 @@ App.prototype.logTime = function(time, issue, subtask, close, description)
             return false;
         }
         
-        App.notifyUser(subtask+' sub-task ('+subTaskIssue+') was created against '+parentIssue);
+        App.notifyUser(subtask+' sub-task ('+App.formatIssueKeyForLog(subTaskIssue)+') was created against '+App.formatIssueKeyForLog(parentIssue));
     }
     
     workLogID = this._jira.logTime(time, subTaskIssue, description);
@@ -271,7 +286,7 @@ App.prototype.logTime = function(time, issue, subtask, close, description)
         return false;
     }
 
-    App.notifyUser(time+' was successfully logged against '+subtask+' of '+parentIssue);
+    App.notifyUser(time+' was successfully logged against '+subtask+' of '+App.formatIssueKeyForLog(parentIssue));
     
     if (close) {
         var issueToClose = '';
@@ -311,7 +326,7 @@ App.prototype.resolveCloseIssue = function(issue, transition)
         return false;
     }
     
-    App.notifyUser(issue+' was successfully resolved/closed');
+    App.notifyUser(App.formatIssueKeyForLog(issue)+' was successfully resolved/closed');
     return true;
 };
 
@@ -598,6 +613,21 @@ App.prototype._registerIssueKeyupListener = function()
 };
 
 /**
+ * Register a listener for when issue key links are clicked
+ * 
+ * @private
+ */
+App.prototype._registerIssueKeyClickListener = function()
+{
+    $('body').on('click', 'a.issueKey', function()
+    {
+        $('#issue').val($(this).text());
+        $('#issue').keyup();
+        return false;
+    });
+};
+
+/**
  * Load the main window
  * 
  * @private
@@ -630,6 +660,7 @@ App.prototype._loadMain = function()
     this._registerTimeClickListener();
     this._registerTimeClearListener();
     this._registerIssueKeyupListener();
+    this._registerIssueKeyClickListener();
     this._setVersionInfo();
     this._populateSubTaskTypes();
     

@@ -73,6 +73,11 @@ div.userLog
     line-height: 1em;
 }
 
+div.userLog a
+{
+    text-decoration: underline;
+}
+
 li.field
 {
     margin-bottom: 5px;
