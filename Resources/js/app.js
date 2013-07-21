@@ -192,13 +192,11 @@ App.prototype.resetForm = function(full)
         return;
     }
     
-    $('#time').val('');
+    $('#timeManual').val('');
     $('#issue').val('');
     $('#description').val('');
     // Deliberately leaving type and close alone
-    
-    $('#time').focus();
-}
+};
 
 /**
  * Log time to JIRA
@@ -320,11 +318,15 @@ App.prototype.resolveCloseIssue = function(issue, transition)
 /**
  * Update the elapsed time
  * 
- * @param Object hour, min, sec
+ * @param Object (Optional) hour, min, sec. If not specified it is fetched from Stopwatch
  * @public
  */
 App.prototype.updateTime = function(time)
 {
+    if (!time) {
+        time = this._stopwatch.getTime();
+    }
+    
     var jiraTime = '';
     if (time.hour) {
         jiraTime = time.hour+'h ';
@@ -332,6 +334,16 @@ App.prototype.updateTime = function(time)
     jiraTime += time.min+'m';
     
     $('#timeAuto').text(jiraTime);
+};
+
+/**
+ * Reset the automatic timer
+ * 
+ */
+App.prototype.resetTime = function()
+{
+    this._stopwatch.restart();
+    this.updateTime();
 };
 
 /**
@@ -477,9 +489,11 @@ App.prototype._registerFormListener = function()
         // Validtion
         $('#loggerForm li.warning').removeClass('warning');
         var errors = [];
-        if (!$('#time').val().match(new RegExp(app.getConfig().get('timeRegex'))) || $('#time').val() == '') {
-            $('#time').parent().addClass('warning');
-            errors.push('\''+$('#time').val()+'\' does not appear to be a valid JIRA time phrase');
+        if (app.getTimeManual()) {
+            if (!$('#timeManual').val().match(new RegExp(app.getConfig().get('timeRegex'))) || $('#timeManual').val() == '') {
+                $('#timeManual').parent().addClass('warning');
+                errors.push('\''+$('#timeManual').val()+'\' does not appear to be a valid JIRA time phrase');
+            }
         }
         if (!$('#issue').val().match(new RegExp(app.getConfig().get('issueKeyRegex'))) || $('#issue').val() == '') {
             $('#issue').parent().addClass('warning');
@@ -505,6 +519,10 @@ App.prototype._registerFormListener = function()
         });
 
         app.logTime(app.getTimeToLog(), values['issue'].toUpperCase(), values['type'], values['close'], values['description']);
+        if (app.getTimeManual()) {
+            $('#clearTimeButton').click();
+        }
+        app.resetTime();
 
         // Prevent regular form submission
         return false;
@@ -522,7 +540,7 @@ App.prototype._registerTimeClickListener = function()
     $('#timeAuto').click({"app": app}, function()
     {
         $(this).hide();
-        $('#timeManual').show();
+        $('#timeManual').show().focus();
         $('#clearTimeButton').text('Cancel');
         app.setTimeManual(true);
     });
@@ -544,8 +562,7 @@ App.prototype._registerTimeClearListener = function()
             $(this).text('Reset');
             app.setTimeManual(false);
         } else {
-            app.getStopwatch().stop(true).start();
-            app.updateTime(app.getStopwatch().getTime());
+            app.resetTime();
         }
     });
 };
@@ -617,9 +634,7 @@ App.prototype._loadMain = function()
     this._populateSubTaskTypes();
     
     this._stopwatch.registerMinListener(this.updateTime);
-    this._stopwatch.start();
-    this.updateTime(this._stopwatch.getTime());
-    
+    this.resetTime();
 };
 
 App.prototype._setVersionInfo = function()

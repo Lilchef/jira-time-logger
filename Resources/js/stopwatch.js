@@ -104,19 +104,17 @@ Stopwatch.prototype.registerHourListener = function(listener)
 Stopwatch.prototype.start = function()
 {
     if (this._interval) {
-        return;
+        return this;
     }
     if (!this._time.sec) {
         this.reset();
     }
     var self = this;
-    this._interval = setInterval(
-        function ()
-        {
-            return self._tick();
-        },
-        1000
-    );
+    this._interval = setInterval(function ()
+    {
+        return self._tick();
+    },
+    1000);
         
     return this;
 };
@@ -131,7 +129,7 @@ Stopwatch.prototype.start = function()
 Stopwatch.prototype.stop = function(reset)
 {
     if (!this._interval) {
-        return;
+        return this;
     }
     clearInterval(this._interval);
     this._interval = null;
@@ -160,6 +158,21 @@ Stopwatch.prototype.reset = function()
 };
 
 /**
+ * Restart the stopwatch
+ * 
+ * Helper method
+ * 
+ * @return Stopwatch Fluent interface
+ * @public
+ */
+Stopwatch.prototype.restart = function()
+{
+    this.stop(true).start();
+    
+    return this;
+};
+
+/**
  * Get the elapsed time
  * 
  * @return Object sec, min, hour
@@ -182,36 +195,45 @@ Stopwatch.prototype.getTime = function()
  */
 Stopwatch.prototype._tick = function()
 {
+    var secChanged = false;
+    var minChanged = false;
+    var hourChanged = false;
+    
     // Seconds
     this._time.sec++;
-    if (this._secListeners.length > 0) {
-        for (var count in this._secListeners) {
-            var listener = this._secListeners[count];
-            listener(this.getTime());
-        }
-    }
+    secChanged = true;
     
     // Minutes
     if (this._time.sec == 60) {
         this._time.sec = 0;
         this._time.min++;
-        if (this._minListeners.length > 0) {
-            for (var count in this._minListeners) {
-                var listener = this._minListeners[count];
-                listener(this.getTime());
-            }
-        }
+        minChanged = true;
     }
     
     // Hours
     if (this._time.min == 60) {
         this._time.min = 0;
         this._time.hour++;
-        if (this._hourListeners.length > 0) {
-            for (var count in this._hourListeners) {
-                var listener = this._hourListeners[count];
-                listener(this.getTime());
-            }
+        hourChanged = true;
+    }
+    
+    // Listeners
+    if (secChanged && this._secListeners.length > 0) {
+        for (var count in this._secListeners) {
+            var listener = this._secListeners[count];
+            listener(this.getTime());
+        }
+    }
+    if (minChanged && this._minListeners.length > 0) {
+        for (var count in this._minListeners) {
+            var listener = this._minListeners[count];
+            listener(this.getTime());
+        }
+    }
+    if (hourChanged && this._hourListeners.length > 0) {
+        for (var count in this._hourListeners) {
+            var listener = this._hourListeners[count];
+            listener(this.getTime());
         }
     }
 };
