@@ -107,7 +107,9 @@ App.notifyUser = function(message, level)
     level = (level) ? level : App.LOG_INFO;
     var colour = (level == App.LOG_WARN) ? '#b75b5b' : '#5bb75b';
     
-    var userLog = $('<div class="userLog '+level.toLowerCase()+'">'+level+': '+message+'</div>');
+    var now = new Date();
+    var dateTimeLogged = now.toLocaleString();
+    var userLog = $('<div class="userLog '+level.toLowerCase()+'" title="'+dateTimeLogged+'">'+level+': '+message+'</div>');
     $('#userLogContainer').prepend(userLog);
     userLog.css({backgroundColor: colour})
             .show()

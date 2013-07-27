@@ -15,6 +15,7 @@ I wrote this app to suit a very specific workflow (whereby subtasks of specific 
 * After time is logged the issue can optionally be resolved/closed
 * Recent activity is logged for reference
     + Issue keys in the log can be clicked to re-use them
+    + Hover over a log entry to see the date and time it was made
 
 ## Installation ##
 Currently there is only a build for Linux systems (tested on Ubuntu 12.04). There may be a Windows version at some point (ask if you want one).
