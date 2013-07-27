@@ -374,7 +374,7 @@ App.prototype.updateTime = function(time)
     }
     jiraTime += time.min+'m';
     
-    $('#timeAuto').text(jiraTime);
+    $('.timeAuto').text(jiraTime);
 };
 
 /**

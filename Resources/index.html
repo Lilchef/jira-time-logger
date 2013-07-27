@@ -36,13 +36,13 @@
                     <li class="field">
                         <div class="row">
                             <div class="four columns">
-                        <div id='timeAuto' class="input" title="Click to override">0m</div>
-                        <input type="text" id="timeManual" name="time" class="text input" placeholder="e.g. '1h 30m'" />
+                                <div id='timeAuto' class="input timeAuto" title="Click to override">0m</div>
+                                <input type="text" id="timeManual" name="time" class="text input" placeholder="e.g. '1h 30m'" />
                             </div>
                             <div class="two columns">
-                        <div class="small rounded pretty danger btn icon-left icon-cancel">
-                            <a href="#" id="clearTimeButton">Reset</a>
-                        </div>
+                                <div class="small rounded pretty danger btn icon-left icon-cancel">
+                                    <a href="#" id="clearTimeButton">Reset</a>
+                                </div>
                             </div>
                         </div>
                     </li>
@@ -70,23 +70,12 @@
                 </ul>
             </div>
             <div class="row">
-                <div class="four columns">
-                    <div class="row">
-                        <div class="two columns">
-                            <div class="small rounded pretty warning btn icon-left icon-cog">
-                                <a href="#" id="reconfigureButton">Reconfigure</a>
-                            </div>
-                        </div>
-                        <div class="two columns">
-                            <div class="two column">
-                                <div class="small rounded pretty danger btn icon-left icon-cancel">
-                                    <a href="#" id="resetFormButton">Reset form</a>
-                                </div>
-                            </div>
-                        </div>
+                <div class="three columns">
+                    <div class="small rounded pretty danger btn icon-left icon-cancel">
+                        <a href="#" id="resetFormButton">Reset form</a>
                     </div>
                 </div>
-                <div class="two columns text-right">
+                <div class="three columns text-right">
                     <div class="medium rounded pretty success btn icon-left icon-hourglass">
                         <a href="#" id="logTimeButton">Log time</a>
                     </div>
@@ -94,8 +83,16 @@
             </div>
         </form>
         <div class="row">
-            <div class="six columns">
-                <h4>Activity log:</h4>
+            <div class="four columns">
+                <div id='dayTotalDisplay'>
+                    Total: <span id='dayTotal'>0m</span>
+                </div>
+                <div class="small rounded pretty danger btn icon-left icon-cancel">
+                    <a href="#" id="resetDayTotalButton">Reset</a>
+                </div>
+            </div>
+            <div class="two columns text-right">
+                Plus <span class='timeAuto'>0m</span> = <span id='dayGrandTotal'>0m</span>
             </div>
         </div>
         <div class="row">
@@ -106,11 +103,14 @@
             </div>
         </div>
         <div class="row" id="footer">
-            <div class="four columns">
+            <div class="three columns">
                 <i class="icon-cc" title="Creative Commons"></i> <i class="icon-cc-sa" title="Share-Alike licensed"></i>
                 &copy; Aaron Baker, <span id="copyYear">2013</span>. JIRA and its logo &copy; Atlassian, Inc.
             </div>
-            <div class="two columns text-right">
+            <div class="three columns text-right">
+                <div class="small rounded pretty warning btn icon-left icon-cog">
+                    <a href="#" id="reconfigureButton">Reconfigure</a>
+                </div>
                 <div class="small rounded pretty primary btn icon-left icon-tools">
                     <a href="#" id="bugButton">Report bug</a>
                 </div>
