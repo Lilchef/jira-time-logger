@@ -159,6 +159,12 @@ App.prototype._stopwatch = null;
 App.prototype._issueTimeout = null;
 
 /**
+ * @type Integer
+ * @private
+ */
+App.prototype._timeManualTimeout = null;
+
+/**
  * @type Boolean
  * @private
  */
@@ -215,6 +221,7 @@ App.prototype.load = function()
  */
 App.prototype.resetForm = function(full)
 {
+    $('#loggerForm li.danger').removeClass('danger');
     $('#summary').html('&nbsp;');
     if (full) {
         $('#loggerForm').get(0).reset();
@@ -388,7 +395,15 @@ App.prototype.getTimeToLog = function()
     if (this._timeManual) {
         return $('#timeManual').val();
     } else {
-        return $('#timeAuto').text();
+        var roundToNearest = 'min';
+        var time = this._stopwatch.getTime(roundToNearest);
+        var jiraTime = '';
+        if (time.hour) {
+            jiraTime = time.hour+'h ';
+        }
+        jiraTime += time.min+'m';
+
+        return jiraTime;
     }
 };
 
@@ -519,16 +534,16 @@ App.prototype._registerFormListener = function()
     {
         var app = event.data.app;
         // Validtion
-        $('#loggerForm li.warning').removeClass('warning');
+        $('#loggerForm li.danger').removeClass('danger');
         var errors = [];
         if (app.getTimeManual()) {
             if (!$('#timeManual').val().match(new RegExp(app.getConfig().get('timeRegex'))) || $('#timeManual').val() == '') {
-                $('#timeManual').parent().addClass('warning');
+                $('#timeManual').parent().parent().parent().addClass('danger');
                 errors.push('\''+$('#timeManual').val()+'\' does not appear to be a valid JIRA time phrase');
             }
         }
         if (!$('#issue').val().match(new RegExp(app.getConfig().get('issueKeyRegex'))) || $('#issue').val() == '') {
-            $('#issue').parent().addClass('warning');
+            $('#issue').parent().addClass('danger');
             errors.push('\''+$('#issue').val()+'\' does not appear to be a valid JIRA issue key');
         }
 
@@ -589,13 +604,36 @@ App.prototype._registerTimeClearListener = function()
     $('#clearTimeButton').click({"app": app}, function()
     {
         if (app.getTimeManual()) {
-            $('#timeManual').val('').hide();
+            $('#timeManual').val('').keyup().hide();
             $('#timeAuto').show();
             $(this).text('Reset');
             app.setTimeManual(false);
         } else {
             app.resetTime();
         }
+    });
+};
+
+/**
+ * Listen for keyup on the manual time field
+ * 
+ * @private
+ */
+App.prototype._registerTimeManualKeyupListener = function()
+{
+    $('#timeManual').keyup(function()
+    {
+        if (this._timeManualTimeout) {
+            clearTimeout(this._timeManualTimeout);
+        }
+        this._timeManualTimeout = setTimeout(function()
+        {
+            if (!$('#timeManual').val().match(new RegExp(App.getInstance().getConfig().get('timeRegex')))) {
+                $('#timeManual').parent().parent().parent().addClass('danger');
+            } else {
+                $('#timeManual').parent().parent().parent().removeClass('danger');
+            }
+        }, 500);
     });
 };
 
@@ -611,13 +649,16 @@ App.prototype._registerIssueKeyupListener = function()
         if (this._issueTimeout) {
             clearTimeout(this._issueTimeout);
         }
-        if (!$('#issue').val().match(new RegExp(App.getInstance().getConfig().get('issueKeyRegex'))) || $('#issue').val() == '') {
-            $('#summary').html('&nbsp;');
-            return;
-        }
         $('#summary').text('Waiting...');
         this._issueTimeout = setTimeout(function()
         {
+            if (!$('#issue').val().match(new RegExp(App.getInstance().getConfig().get('issueKeyRegex'))) || $('#issue').val() == '') {
+                $('#issue').parent().addClass('danger');
+                $('#summary').html('&nbsp;');
+                return;
+            }
+         
+            $('#issue').parent().removeClass('danger');
             $('#summary').text('Checking...');
             var issue = App.getInstance().getJira().getIssueSummary($('#issue').val());
             if (issue && issue.fields.summary) {
@@ -674,6 +715,7 @@ App.prototype._loadMain = function()
     this._registerResetFormListener();
     this._registerReconfigureListener();
     this._registerBugListener();
+    this._registerTimeManualKeyupListener();
     this._registerTimeClickListener();
     this._registerTimeClearListener();
     this._registerIssueKeyupListener();

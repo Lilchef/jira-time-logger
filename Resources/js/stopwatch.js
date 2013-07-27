@@ -175,12 +175,47 @@ Stopwatch.prototype.restart = function()
 /**
  * Get the elapsed time
  * 
+ * @param String (Optional) Either hour or min to round to the nearest of
  * @return Object sec, min, hour
  * @public
  */
-Stopwatch.prototype.getTime = function()
+Stopwatch.prototype.getTime = function(round)
 {
-    return this._time;
+    var time = this._time;
+    if (round) {
+        time = this.roundTime(time, round);
+    }
+    return time;
+};
+
+/**
+ * Round a time to the nearest minute or hour
+ * 
+ * @param Object time hour, min, sec
+ * @param String Either hour or min (or nothing) to round to the nearest of
+ * @returns Object Modified time
+ */
+Stopwatch.prototype.roundTime = function(time, round)
+{
+    if (round == 'min') {
+        var currSec = time.sec;
+        time.sec = 0;
+        if (currSec >= 30) {
+            time.min++;
+            if (time.min == 60) {
+                time.min = 0;
+                time.hour++;
+            }
+        }
+    } else if (round == 'hour') {
+        var currMin = time.min;
+        time.min = 0;
+        if (currMin >= 30) {
+            time.hour++;
+        }
+    }
+    
+    return time;
 };
 
 /*
