@@ -180,7 +180,7 @@ App.prototype._timeManual = false;
  * @type Object
  * @private
  */
-App.prototype._dayTotal = null;
+App.prototype._loggedTotal = null;
 
 /*
  * Instances public methods
@@ -269,7 +269,7 @@ App.prototype.logTime = function(time, issue, subtask, close, description)
     if (!subtask) {
         workLogID = this._jira.logTime(time, issue, description);
         if (!workLogID) {
-            App.alertUser('No work log was returned by JIRA!');
+            App.alertUser('Failed to log '+time+' against '+App.formatIssueKeyForLog(issue)+': no work log was returned by JIRA!');
             return false;
         }
         
@@ -286,7 +286,7 @@ App.prototype.logTime = function(time, issue, subtask, close, description)
             this.resolveCloseIssue(issue, this._config.get('mainTaskCloseTransition'));
         }
         
-        this.addToDayTotal(this.jiraTimeToStopwatchTime(time));
+        this.addToLoggedTotal(this.jiraTimeToStopwatchTime(time));
         
         this.resetForm();
         return true;
@@ -311,7 +311,7 @@ App.prototype.logTime = function(time, issue, subtask, close, description)
     if (!subTaskIssue) {
         subTaskIssue = this._jira.createSubTask(parentIssue, subtask);
         if (!subTaskIssue) {
-            App.alertUser('No subtask key was returned by JIRA!');
+            App.alertUser('Failed to log '+time+' against '+App.formatIssueKeyForLog(issue)+': no subtask key was returned by JIRA!');
             return false;
         }
         
@@ -320,7 +320,7 @@ App.prototype.logTime = function(time, issue, subtask, close, description)
     
     workLogID = this._jira.logTime(time, subTaskIssue, description);
     if (!workLogID) {
-        App.alertUser('No work log was returned by JIRA!');
+        App.alertUser('Failed to log '+time+' against '+App.formatIssueKeyForLog(issue)+': no work log was returned by JIRA!');
         return false;
     }
 
@@ -339,7 +339,7 @@ App.prototype.logTime = function(time, issue, subtask, close, description)
         this.resolveCloseIssue(issueToClose, transition);
     }
     
-    this.addToDayTotal(this.jiraTimeToStopwatchTime(time));
+    this.addToLoggedTotal(this.jiraTimeToStopwatchTime(time));
     
     this.resetForm();
     return true;
@@ -458,9 +458,9 @@ App.prototype.resetTime = function()
     
     // If it looks like the time logger's been running overnight offer to reset the day total
     if (currTime.hour >= App.TIME_HOUR_LIMIT) {
-        var resetDayTotal = confirm("It looks like this is a new day,\ndo you want to reset the logged total as well?");
-        if (resetDayTotal) {
-            this.resetDayTotal();
+        var resetLoggedTotal = confirm("It looks like this is a new day,\ndo you want to reset the logged total as well?");
+        if (resetLoggedTotal) {
+            this.resetLoggedTotal();
         }
     }
 };
@@ -544,17 +544,17 @@ App.prototype.getStopwatch = function()
  * @param Object time hour, min, sec
  * @public
  */
-App.prototype.addToDayTotal = function(time)
+App.prototype.addToLoggedTotal = function(time)
 {
-    this._dayTotal.hour += time.hour;
+    this._loggedTotal.hour += parseInt(time.hour);
     
-    this._dayTotal.min += time.min;
-    if (this._dayTotal.min >= 60) {
-        this._dayTotal.min -= 60;
-        this._dayTotal.hour++;
+    this._loggedTotal.min += parseInt(time.min);
+    if (this._loggedTotal.min >= 60) {
+        this._loggedTotal.min -= 60;
+        this._loggedTotal.hour++;
     }
     
-    this.updateDayTotal();
+    this.updateLoggedTotal();
 };
 
 /**
@@ -563,15 +563,15 @@ App.prototype.addToDayTotal = function(time)
  * @param Object (Optional) hour, min, sec. If not specified it is loaded from App
  * @public
  */
-App.prototype.updateDayTotal = function(total)
+App.prototype.updateLoggedTotal = function(total)
 {    
     if (!total) {
-        total = this._dayTotal;
+        total = this._loggedTotal;
     }
     
     var jiraTime = this.stopwatchTimeToJiraTime(total);
     
-    $('#dayTotal').text(jiraTime);
+    $('#loggedTotal').text(jiraTime);
     
     this.updateDayGrandTotal();
 };
@@ -581,15 +581,15 @@ App.prototype.updateDayTotal = function(total)
  * 
  * @private
  */
-App.prototype.resetDayTotal = function()
+App.prototype.resetLoggedTotal = function()
 {
-    this._dayTotal = {
+    this._loggedTotal = {
         "hour": 0,
         "min": 0,
         "sec": 0
     };
     
-    this.updateDayTotal();
+    this.updateLoggedTotal();
 };
 
 /**
@@ -598,23 +598,21 @@ App.prototype.resetDayTotal = function()
  * @public
  */
 App.prototype.updateDayGrandTotal = function()
-{    
-    var grandTotal = this._dayTotal;
+{
+    var logged = this._loggedTotal;
     var unlogged = this._stopwatch.getTime();
-console.log(grandTotal);
-console.log(unlogged);
-    grandTotal.sec += unlogged.sec;
-    if (grandTotal.sec >= 60) {
-        grandTotal.sec -= 60;
-        grandTotal.min++;
+    if (!logged || !unlogged) {
+        return;
     }
+    var grandTotal = {};
+    grandTotal.min = logged.min;
+    grandTotal.hour = logged.hour;
     
-    grandTotal.min = unlogged.min;
+    grandTotal.min += unlogged.min;
     if (grandTotal.min >= 60) {
         grandTotal.min -= 60;
         grandTotal.hour++;
     }
-    
     grandTotal.hour += unlogged.hour;
     
     var jiraTime = this.stopwatchTimeToJiraTime(grandTotal);
@@ -725,12 +723,16 @@ App.prototype._registerFormListener = function()
             }
         });
 
-        app.logTime(app.getTimeToLog(), values['issue'].toUpperCase(), values['type'], values['close'], values['description']);
+        var success = app.logTime(app.getTimeToLog(), values['issue'].toUpperCase(), values['type'], values['close'], values['description']);
+        if (!success) {
+            return false;
+        }
+        
         if (app.getTimeManual()) {
             $('#clearTimeButton').click();
         }
-        app.resetTime();
 
+        app.resetTime();
         // Prevent regular form submission
         return false;
     });
@@ -850,12 +852,12 @@ App.prototype._registerIssueKeyClickListener = function()
  * 
  * @private
  */
-App.prototype._registerResetDayTotalClickListener = function()
+App.prototype._registerResetLoggedTotalClickListener = function()
 {
     var app = this;
-    $('#resetDayTotalButton').click({"app": app}, function()
+    $('#resetLoggedTotalButton').click({"app": app}, function()
     {
-        app.resetDayTotal();
+        app.resetLoggedTotal();
     });
 };
 
@@ -894,11 +896,11 @@ App.prototype._loadMain = function()
     this._registerTimeClearListener();
     this._registerIssueKeyupListener();
     this._registerIssueKeyClickListener();
-    this._registerResetDayTotalClickListener();
+    this._registerResetLoggedTotalClickListener();
     this._setVersionInfo();
     this._populateSubTaskTypes();
     
-    this.resetDayTotal();
+    this.resetLoggedTotal();
     this._stopwatch.registerMinListener(this.updateTime);
     this.resetTime();
 };

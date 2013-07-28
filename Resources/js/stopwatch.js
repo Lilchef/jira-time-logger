@@ -14,6 +14,7 @@
  */
 function Stopwatch()
 {
+    this.reset();
 }
 
 /*
@@ -23,7 +24,7 @@ function Stopwatch()
 /**
  * @type Object
  */
-Stopwatch.prototype._time = {};
+Stopwatch.prototype._time = null;
 
 /**
  * @type Integer
@@ -225,7 +226,6 @@ Stopwatch.prototype.roundTime = function(time, round)
 /**
  * Tick over a second
  * 
- * @param Stopwatch self Context
  * @private
  */
 Stopwatch.prototype._tick = function()
