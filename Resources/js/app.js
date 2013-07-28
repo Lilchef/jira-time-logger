@@ -449,6 +449,7 @@ App.prototype.updateTime = function(time)
 /**
  * Reset the automatic timer
  * 
+ * @public
  */
 App.prototype.resetTime = function()
 {
@@ -466,9 +467,22 @@ App.prototype.resetTime = function()
 };
 
 /**
+ * Remove time from the elapsed total
+ * 
+ * @param String time JIRA time phrase
+ * @public
+ */
+App.prototype.deductTime = function(time)
+{
+    this.getStopwatch().deductTime(this.jiraTimeToStopwatchTime(time));
+    this.updateTime();
+};
+
+/**
  * Get the time to log
  * 
  * @returns String
+ * @public
  */
 App.prototype.getTimeToLog = function()
 {
@@ -723,16 +737,19 @@ App.prototype._registerFormListener = function()
             }
         });
 
-        var success = app.logTime(app.getTimeToLog(), values['issue'].toUpperCase(), values['type'], values['close'], values['description']);
+        var time = app.getTimeToLog();
+        var success = app.logTime(time, values['issue'].toUpperCase(), values['type'], values['close'], values['description']);
         if (!success) {
             return false;
         }
         
         if (app.getTimeManual()) {
             $('#clearTimeButton').click();
+            app.deductTime(time);
+        } else {
+            app.resetTime();
         }
 
-        app.resetTime();
         // Prevent regular form submission
         return false;
     });

@@ -219,6 +219,62 @@ Stopwatch.prototype.roundTime = function(time, round)
     return time;
 };
 
+/**
+ * Deduct some time from the elapsed time
+ * 
+ * @param Object time hour, min, sec
+ * @returns Stopwatch Fluent interface
+ * @public
+ */
+Stopwatch.prototype.deductTime = function(time)
+{
+    var secChanged = false;
+    var minChanged = false;
+    var hourChanged = false;
+    
+    if (time.sec) {
+        this._time.sec -= time.sec;
+        secChanged = true;
+        
+        if (this._time.sec < 0) {
+            this._time.sec += 60;
+            this._time.min--;
+            minChanged = true;
+        }
+    }
+    if (time.min) {
+        this._time.min -= time.min;
+        minChanged = true;
+        
+        if (this._time.min < 0) {
+            this._time.min += 60;
+            this._time.hour--;
+            hourChanged = true;
+        }        
+    }
+    if (time.hour) {
+        this._time.hour -= time.hour;
+        hourChanged = true;
+        
+        if (this._time.hour < 0) {
+            this._time.hour = 0;
+        }
+    }
+    
+    // Listeners
+    if (secChanged && this._secListeners.length > 0) {
+        this._notifySecListeners();
+    }
+    if (minChanged && this._minListeners.length > 0) {
+        this._notifyMinListeners();
+    }
+    if (hourChanged && this._hourListeners.length > 0) {
+        this._notifyHourListeners();
+    }
+    
+    return this;
+};
+
 /*
  * Instances private methods
  */
@@ -254,18 +310,54 @@ Stopwatch.prototype._tick = function()
     
     // Listeners
     if (secChanged && this._secListeners.length > 0) {
+        this._notifySecListeners();
+    }
+    if (minChanged && this._minListeners.length > 0) {
+        this._notifyMinListeners();
+    }
+    if (hourChanged && this._hourListeners.length > 0) {
+        this._notifyHourListeners();
+    }
+};
+
+/**
+ * Notify listeners that the seconds have changed
+ * 
+ * @protected
+ */
+Stopwatch.prototype._notifySecListeners = function()
+{
+    if (this._secListeners.length > 0) {
         for (var count in this._secListeners) {
             var listener = this._secListeners[count];
             listener(this.getTime());
         }
     }
-    if (minChanged && this._minListeners.length > 0) {
+};
+
+/**
+ * Notify listeners that the minutes have changed
+ * 
+ * @protected
+ */
+Stopwatch.prototype._notifyMinListeners = function()
+{
+    if (this._minListeners.length > 0) {
         for (var count in this._minListeners) {
             var listener = this._minListeners[count];
             listener(this.getTime());
         }
     }
-    if (hourChanged && this._hourListeners.length > 0) {
+};
+
+/**
+ * Notify listeners that the hours have changed
+ * 
+ * @protected
+ */
+Stopwatch.prototype._notifyHourListeners = function()
+{
+    if (this._hourListeners.length > 0) {
         for (var count in this._hourListeners) {
             var listener = this._hourListeners[count];
             listener(this.getTime());
