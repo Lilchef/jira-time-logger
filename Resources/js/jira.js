@@ -27,6 +27,15 @@ function Jira(config)
 /**
  * @constant
  */
+Jira.TIME_REGEX = "^([0-9]+[dD] ?)?([0-9]+[hH] ?)?([0-9]+[mM])?$";
+/**
+ * @constant
+ */
+Jira.ISSUE_KEY_REGEX = "^[A-Za-z]{1,10}-[0-9]+$";
+
+/**
+ * @constant
+ */
 Jira.URL_CREATE_ISSUE = 'issue';
 /**
  * @constant
@@ -44,6 +53,7 @@ Jira.URL_ISSUE_TYPES = 'issuetype';
  * @constant
  */
 Jira.URL_TRANSITION = 'issue/{issue}/transitions';
+
 /**
  * @constant
  */
@@ -52,6 +62,7 @@ Jira.REQUEST_GET = 'GET';
  * @constant
  */
 Jira.REQUEST_POST = 'POST';
+
 /**
  * @constant
  */

@@ -55,6 +55,10 @@ App.LOG_WARN = 'WARN';
  * @constant
  */
 App.LOG_MAX_SUMMARY_LENGTH = 20;
+/**
+ * @constant
+ */
+App.TIME_HOUR_LIMIT = 10;
 
 /**
  * @static
@@ -172,6 +176,12 @@ App.prototype._timeManualTimeout = null;
  */
 App.prototype._timeManual = false;
 
+/**
+ * @type Object
+ * @private
+ */
+App.prototype._dayTotal = null;
+
 /*
  * Instances public methods
  */
@@ -276,6 +286,8 @@ App.prototype.logTime = function(time, issue, subtask, close, description)
             this.resolveCloseIssue(issue, this._config.get('mainTaskCloseTransition'));
         }
         
+        this.addToDayTotal(this.jiraTimeToStopwatchTime(time));
+        
         this.resetForm();
         return true;
     }
@@ -327,6 +339,8 @@ App.prototype.logTime = function(time, issue, subtask, close, description)
         this.resolveCloseIssue(issueToClose, transition);
     }
     
+    this.addToDayTotal(this.jiraTimeToStopwatchTime(time));
+    
     this.resetForm();
     return true;
 };
@@ -357,6 +371,54 @@ App.prototype.resolveCloseIssue = function(issue, transition)
 };
 
 /**
+ * Convert a Stopwatch time object to a JIRA time string
+ * 
+ * @param Object time
+ * @returns String
+ */
+App.prototype.stopwatchTimeToJiraTime = function(time)
+{
+    var jiraTime = '';
+    if (time.hour) {
+        jiraTime = time.hour+'h ';
+    }
+    jiraTime += time.min+'m';
+    
+    return jiraTime;
+};
+
+/**
+ * Convert a JIRA time string to a Stopwatch time object
+ * 
+ * @param String time
+ * @returns Object
+ */
+App.prototype.jiraTimeToStopwatchTime = function(time)
+{
+    var stopwatchTime = {
+        "hour": 0,
+        "min": 0,
+        "sec": 0
+    };
+    
+    var timeParts = time.match(new RegExp(Jira.TIME_REGEX));
+    if (timeParts[1]) {
+        var days = parseInt(timeParts[1].replace(/[dD] ?/, ''));
+        stopwatchTime.hour += (days * 24);
+    }
+    if (timeParts[2]) {
+        var hours = parseInt(timeParts[2].replace(/[hH] ?/, ''));
+        stopwatchTime.hour += hours;
+    }
+    if (timeParts[3]) {
+        var mins = parseInt(timeParts[3].replace(/[mM]/, ''));
+        stopwatchTime.min += mins;
+    }
+    
+    return stopwatchTime;
+};
+
+/**
  * Update the elapsed time
  * 
  * @param Object (Optional) hour, min, sec. If not specified it is fetched from Stopwatch
@@ -364,17 +426,24 @@ App.prototype.resolveCloseIssue = function(issue, transition)
  */
 App.prototype.updateTime = function(time)
 {
-    if (!time) {
-        time = this._stopwatch.getTime();
+    // This method can be called out of context (as a Stopwatch listener)
+    // so 'this' may not be what we would expect
+    var app = null;
+    if (this instanceof App) {
+        app = this;
+    } else {
+        app = App.getInstance();
     }
     
-    var jiraTime = '';
-    if (time.hour) {
-        jiraTime = time.hour+'h ';
+    if (!time) {
+        time = app.getStopwatch().getTime();
     }
-    jiraTime += time.min+'m';
+    
+    var jiraTime = app.stopwatchTimeToJiraTime(time);
     
     $('.timeAuto').text(jiraTime);
+    
+    app.updateDayGrandTotal();
 };
 
 /**
@@ -383,8 +452,17 @@ App.prototype.updateTime = function(time)
  */
 App.prototype.resetTime = function()
 {
+    var currTime = this._stopwatch.getTime();
     this._stopwatch.restart();
     this.updateTime();
+    
+    // If it looks like the time logger's been running overnight offer to reset the day total
+    if (currTime.hour >= App.TIME_HOUR_LIMIT) {
+        var resetDayTotal = confirm("It looks like this is a new day,\ndo you want to reset the logged total as well?");
+        if (resetDayTotal) {
+            this.resetDayTotal();
+        }
+    }
 };
 
 /**
@@ -399,11 +477,7 @@ App.prototype.getTimeToLog = function()
     } else {
         var roundToNearest = 'min';
         var time = this._stopwatch.getTime(roundToNearest);
-        var jiraTime = '';
-        if (time.hour) {
-            jiraTime = time.hour+'h ';
-        }
-        jiraTime += time.min+'m';
+        var jiraTime = this.stopwatchTimeToJiraTime(time);
 
         return jiraTime;
     }
@@ -462,6 +536,90 @@ App.prototype.getJira = function()
 App.prototype.getStopwatch = function()
 {
     return this._stopwatch;
+};
+
+/**
+ * Add to the daily total
+ * 
+ * @param Object time hour, min, sec
+ * @public
+ */
+App.prototype.addToDayTotal = function(time)
+{
+    this._dayTotal.hour += time.hour;
+    
+    this._dayTotal.min += time.min;
+    if (this._dayTotal.min >= 60) {
+        this._dayTotal.min -= 60;
+        this._dayTotal.hour++;
+    }
+    
+    this.updateDayTotal();
+};
+
+/**
+ * Update the daily total time
+ * 
+ * @param Object (Optional) hour, min, sec. If not specified it is loaded from App
+ * @public
+ */
+App.prototype.updateDayTotal = function(total)
+{    
+    if (!total) {
+        total = this._dayTotal;
+    }
+    
+    var jiraTime = this.stopwatchTimeToJiraTime(total);
+    
+    $('#dayTotal').text(jiraTime);
+    
+    this.updateDayGrandTotal();
+};
+
+/**
+ * Reset the daily total
+ * 
+ * @private
+ */
+App.prototype.resetDayTotal = function()
+{
+    this._dayTotal = {
+        "hour": 0,
+        "min": 0,
+        "sec": 0
+    };
+    
+    this.updateDayTotal();
+};
+
+/**
+ * Update the daily grand total time
+ * 
+ * @public
+ */
+App.prototype.updateDayGrandTotal = function()
+{    
+    var grandTotal = this._dayTotal;
+    var unlogged = this._stopwatch.getTime();
+console.log(grandTotal);
+console.log(unlogged);
+    grandTotal.sec += unlogged.sec;
+    if (grandTotal.sec >= 60) {
+        grandTotal.sec -= 60;
+        grandTotal.min++;
+    }
+    
+    grandTotal.min = unlogged.min;
+    if (grandTotal.min >= 60) {
+        grandTotal.min -= 60;
+        grandTotal.hour++;
+    }
+    
+    grandTotal.hour += unlogged.hour;
+    
+    var jiraTime = this.stopwatchTimeToJiraTime(grandTotal);
+    
+    $('#dayGrandTotal').text(jiraTime);
 };
 
 /*
@@ -539,7 +697,7 @@ App.prototype._registerFormListener = function()
         $('#loggerForm li.danger').removeClass('danger');
         var errors = [];
         if (app.getTimeManual()) {
-            if (!$('#timeManual').val().match(new RegExp(app.getConfig().get('timeRegex'))) || $('#timeManual').val() == '') {
+            if (!$('#timeManual').val().match(new RegExp(Jira.TIME_REGEX)) || $('#timeManual').val() == '') {
                 $('#timeManual').parent().parent().parent().addClass('danger');
                 errors.push('\''+$('#timeManual').val()+'\' does not appear to be a valid JIRA time phrase');
             }
@@ -630,7 +788,7 @@ App.prototype._registerTimeManualKeyupListener = function()
         }
         this._timeManualTimeout = setTimeout(function()
         {
-            if (!$('#timeManual').val().match(new RegExp(App.getInstance().getConfig().get('timeRegex')))) {
+            if (!$('#timeManual').val().match(new RegExp(Jira.TIME_REGEX))) {
                 $('#timeManual').parent().parent().parent().addClass('danger');
             } else {
                 $('#timeManual').parent().parent().parent().removeClass('danger');
@@ -688,6 +846,20 @@ App.prototype._registerIssueKeyClickListener = function()
 };
 
 /**
+ * Register a listener for the reset day total button click
+ * 
+ * @private
+ */
+App.prototype._registerResetDayTotalClickListener = function()
+{
+    var app = this;
+    $('#resetDayTotalButton').click({"app": app}, function()
+    {
+        app.resetDayTotal();
+    });
+};
+
+/**
  * Load the main window
  * 
  * @private
@@ -722,9 +894,11 @@ App.prototype._loadMain = function()
     this._registerTimeClearListener();
     this._registerIssueKeyupListener();
     this._registerIssueKeyClickListener();
+    this._registerResetDayTotalClickListener();
     this._setVersionInfo();
     this._populateSubTaskTypes();
     
+    this.resetDayTotal();
     this._stopwatch.registerMinListener(this.updateTime);
     this.resetTime();
 };
