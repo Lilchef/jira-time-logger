@@ -746,7 +746,7 @@ App.prototype._registerFormListener = function()
                 errors.push('\''+$('#timeManual').val()+'\' does not appear to be a valid JIRA time phrase');
             }
         }
-        if (!$('#issue').val().match(new RegExp(app.getConfig().get('issueKeyRegex'))) || $('#issue').val() == '') {
+        if (!$('#issue').val().match(new RegExp(Jira.ISSUE_KEY_REGEX)) || $('#issue').val() == '') {
             $('#issue').parent().addClass('danger');
             errors.push('\''+$('#issue').val()+'\' does not appear to be a valid JIRA issue key');
         }
@@ -863,7 +863,7 @@ App.prototype._registerIssueKeyupListener = function()
         $('#summary').text('Waiting...');
         this._issueTimeout = setTimeout(function()
         {
-            if (!$('#issue').val().match(new RegExp(App.getInstance().getConfig().get('issueKeyRegex'))) || $('#issue').val() == '') {
+            if (!$('#issue').val().match(new RegExp(Jira.ISSUE_KEY_REGEX)) || $('#issue').val() == '') {
                 $('#issue').parent().addClass('danger');
                 $('#summary').html('&nbsp;');
                 return;
