@@ -18,6 +18,9 @@
                 <h4>Configuration</h4>
             </div>
         </div>
+        <div class="row" id="configError">
+            &nbsp;
+        </div>
         
         <form id="configForm" method="POST">
             <div class="row">
@@ -63,12 +66,18 @@
         <script type="text/javascript" src="js/jquery.base64.min.js"></script>
         <script type="text/javascript" src="js/jquery.color.min.js"></script>
         <script type="text/javascript" src="gumby/js/libs/gumby.min.js"></script>
+        <script type="text/javascript" src="js/stopwatch.js"></script>
         <script type="text/javascript" src="js/jira.js"></script>
         <script type="text/javascript" src="js/config.js"></script>
         <script type="text/javascript" src="js/app.js"></script>
         <script type="text/javascript">
             $(document).ready(function() {
                 try {
+//                    var window = Ti.UI.currentWindow;
+//                    if (window.getURL().indexOf('err=1') > 0) {
+//                        $('#configError').text('There seems to be a problem with your config, please check it carefully');
+//                    }
+                    
                     App.getInstance().getConfig().populateForm();
                     App.getInstance().getConfig().registerSubmitListener(function() {
                         App.getInstance().load();

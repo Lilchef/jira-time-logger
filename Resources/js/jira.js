@@ -36,6 +36,10 @@ Jira.ISSUE_KEY_REGEX = "^[A-Za-z]{1,10}-[0-9]+$";
 /**
  * @constant
  */
+Jira.URL_SERVER_INFO = 'serverInfo';
+/**
+ * @constant
+ */
 Jira.URL_CREATE_ISSUE = 'issue';
 /**
  * @constant
@@ -101,6 +105,26 @@ Jira.prototype._transitions = {};
 /*
  * Instance public methods
  */
+
+/**
+ * Test the connection to JIRA
+ * 
+ * @return Boolean Success?
+ * @public
+ */
+Jira.prototype.testConnection = function()
+{
+    this._ajaxValues.connectionSuccess = false;
+    this._makeRequest(Jira.URL_SERVER_INFO, {}, Jira.REQUEST_GET, function()
+    {
+        this._ajaxValues.connectionSuccess = true;
+    }, function()
+    {
+        // Default is failure so do nothing
+    });
+    
+    return this._ajaxValues.connectionSuccess;
+};
 
 /**
  * Get the issue types from JIRA

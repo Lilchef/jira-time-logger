@@ -193,8 +193,15 @@ App.prototype._loggedTotal = null;
  */
 App.prototype.init = function()
 {
+    // Check dependencies
     if (!Config) {
         throw 'App cannot function without Config';
+    }
+    if (!Jira) {
+        throw 'App cannot function without Jira';
+    }
+    if (!Stopwatch) {
+        throw 'App cannot function without Stopwatch';
     }
     
     // Ensure console.log is defined
@@ -205,7 +212,32 @@ App.prototype.init = function()
     this._config = new Config();
     this._config.init();
     
+    this._jira = new Jira(this._config);
+    
+    this._stopwatch = new Stopwatch();
+    
     App._maxLogs = this._config.get('maxLogs', 'jtl');
+};
+
+/**
+ * Check the configuration is correct
+ * 
+ * @return Boolean
+ * @public
+ */
+App.prototype.checkConfig = function()
+{
+    if (!this._config.ready()) {
+        return false;
+    }
+    $('body').append('<div id="mask">Testing JIRA connection, please wait</div>');
+    if (!this._jira.testConnection()) {
+        $('#mask').remove();
+        return false;
+    }
+    
+    $('#mask').remove();
+    return true;
 };
 
 /**
@@ -216,8 +248,8 @@ App.prototype.init = function()
 App.prototype.load = function()
 {
     // If config needs setting
-    if (!this._config.ready()) {
-        window.location = 'app://config.html';
+    if (!this.checkConfig()) {
+        window.location = 'app://config.html?err=1';
         return;
     }
 
@@ -890,18 +922,6 @@ App.prototype._loadMain = function()
         window.location = 'app://index.html';
         return;
     }
-    
-    // Check dependencies
-    if (!Jira) {
-        throw 'App cannot function without Jira';
-    }
-    if (!Stopwatch) {
-        throw 'App cannot function without Stopwatch';
-    }
-    
-    this._jira = new Jira(this._config);
-    
-    this._stopwatch = new Stopwatch();
     
     this._registerFormListener();
     this._registerLogTimeListener();
