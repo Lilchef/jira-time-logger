@@ -230,7 +230,7 @@ App.prototype.checkConfig = function()
     if (!this._config.ready()) {
         return false;
     }
-    $('body').append('<div id="mask">Testing JIRA connection, please wait</div>');
+    $('body').append('<div id="mask"><div id="maskText">Testing JIRA connection, please wait</div></div>');
     if (!this._jira.testConnection()) {
         $('#mask').remove();
         return false;

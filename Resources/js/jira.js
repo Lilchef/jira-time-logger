@@ -70,6 +70,11 @@ Jira.REQUEST_POST = 'POST';
 /**
  * @constant
  */
+Jira.AJAX_TIMEOUT_MS = 8000;
+
+/**
+ * @constant
+ */
 Jira.TYPES_INC_SUBTASKS_NO = 0;
 /**
  * @constant
@@ -433,6 +438,7 @@ Jira.prototype._makeRequest = function(urlSlug, data, type, success, failure)
             'Content-Type': 'application/json'
         },
         data: data ? JSON.stringify(data) : '{}',
+        timeout: Jira.AJAX_TIMEOUT_MS,
         success: success,
         error: failure
     });
