@@ -492,6 +492,9 @@ App.prototype.resetTime = function()
     var currTime = this._stopwatch.getTime();
     this._stopwatch.restart();
     this.updateTime();
+    if (currTime && (currTime.min || currTime.hour)) {
+        App.notifyUser('The accrued time has been reset ('+this.stopwatchTimeToJiraTime(currTime)+' dropped)');
+    }
     
     // If it looks like the time logger's been running overnight offer to reset the day total
     if (currTime.hour >= App.TIME_HOUR_LIMIT) {
@@ -633,6 +636,7 @@ App.prototype.updateLoggedTotal = function(total)
  */
 App.prototype.resetLoggedTotal = function()
 {
+    var currTotal = this._loggedTotal;
     this._loggedTotal = {
         "hour": 0,
         "min": 0,
@@ -640,6 +644,9 @@ App.prototype.resetLoggedTotal = function()
     };
     
     this.updateLoggedTotal();
+    if (currTotal && (currTotal.min || currTotal.hour)) {
+        App.notifyUser('The total logged time has been reset ('+this.stopwatchTimeToJiraTime(currTotal)+' dropped)');
+    }
 };
 
 /**
