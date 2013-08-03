@@ -165,7 +165,8 @@ Config.prototype.save = function()
 };
 
 /*
- * Instance private methods
+ * Instance protected methods
+ * No such thing in JavaScript, it's just conceptual
  */
 
 /**

@@ -399,7 +399,8 @@ Jira.prototype.getIssueSummary = function(issue)
 };
 
 /*
- * Instance private methods
+ * Instance protected methods
+ * No such thing in JavaScript, it's just conceptual
  */
 
 /**

@@ -15,15 +15,71 @@
  */
 function App()
 {
+    /*
+     * Private members
+     */
+    
+    /**
+     * @type String
+     * @private
+     */
     var version = Ti.App.getVersion();
+    /**
+     * @type String
+     * @private
+     */
     var bugReportEmail = 'bugs@aaronbaker.co.uk';
+    /**
+     * @type Config
+     * @private
+     */
+    var config = null;
+    /**
+     * @type Jira
+     * @private
+     */
+    var jira = null;
+    /**
+     * @type Stopwatch
+     * @private
+     */
+    var stopwatch = null;
+    /**
+     * @type ActivityLog
+     * @private
+     */
+    var activityLog = null;
+    /**
+     * @type Boolean
+     * @private
+     */
+    var timeManual = false;
+    /**
+     * @type Integer
+     * @private
+     */
+    var issueTimeout = null;
+    /**
+     * @type Integer
+     * @private
+     */
+    var timeManualTimeout = null;
+    /**
+     * @type Object
+     * @private
+     */
+    var loggedTotal = null;
+    
+    /*
+     * Privileged (public) methods
+     */
     
     /**
      * Get the version number of the app
      * 
      * @private
      */
-    this._getVersion = function()
+    this.getVersion = function()
     {
         return version;
     };
@@ -33,9 +89,205 @@ function App()
      * 
      * @private
      */
-    this._getBugReportEmail = function()
+    this.getBugReportEmail = function()
     {
         return bugReportEmail;
+    };
+
+    /**
+     * Get the config
+     * 
+     * @returns Config
+     * @public
+     */
+    this.getConfig = function()
+    {
+        return config;
+    };
+    
+    /**
+     * Set the config
+     * 
+     * @param Config newConfig
+     * @public
+     */
+    this.setConfig = function(newConfig)
+    {
+        if (!(newConfig instanceof Config)) {
+            throw 'App.setConfig called with non-Config';
+        }
+        config = newConfig;
+        return this;
+    };
+
+    /**
+     * Get the Jira instance
+     * 
+     * @returns Jira
+     * @public
+     */
+    this.getJira = function()
+    {
+        return jira;
+    };
+    
+    /**
+     * Set the Jira instance
+     * 
+     * @param Jira newJira
+     * @public
+     */
+    this.setJira = function(newJira)
+    {
+        if (!(newJira instanceof Jira)) {
+            throw 'App.setJira called with non-Jira';
+        }
+        jira = newJira;
+        return this;
+    };
+
+    /**
+     * Get the stopwatch
+     * 
+     * @returns Stopwatch
+     * @public
+     */
+    this.getStopwatch = function()
+    {
+        return stopwatch;
+    };
+    
+    /**
+     * Set the stopwatch
+     * 
+     * @param Stopwatch newStopwatch
+     * @public
+     */
+    this.setStopwatch = function(newStopwatch)
+    {
+        if (!(newStopwatch instanceof Stopwatch)) {
+            throw 'App.setStopwatch called with non-Stopwatch';
+        }
+        stopwatch = newStopwatch;
+        return this;
+    };
+    
+    /**
+     * Get the ActivityLog
+     * 
+     * @returns ActivityLog
+     * @public
+     */
+    this.getActivityLog = function()
+    {
+        return activityLog;
+    };
+    
+    /**
+     * Set the ActivityLog
+     * 
+     * @param ActivityLog newActivityLog
+     * @public
+     */
+    this.setActivityLog = function(newActivityLog)
+    {
+        if (!(newActivityLog instanceof ActivityLog)) {
+            throw 'App.setActivityLog called with non-ActivityLog';
+        }
+        activityLog = newActivityLog;
+        return this;
+    };
+    
+    /**
+     * Get whether to use manually entered time
+     * 
+     * @return Boolean
+     * @public
+     */
+    this.getTimeManual = function()
+    {
+        return timeManual;
+    };
+
+    /**
+     * Set whether to use manually entered time
+     * 
+     * @param Boolean manual
+     * @public
+     */
+    this.setTimeManual = function(manual)
+    {
+        timeManual = Boolean(manual);
+        return this;
+    };
+    
+    /**
+     * Get the issue timeout
+     * 
+     * @return Integer
+     * @public
+     */
+    this.getIssueTimeout = function()
+    {
+        return issueTimeout;
+    };
+
+    /**
+     * Set the issue timeout
+     * 
+     * @param Integer newIssueTimeout
+     * @public
+     */
+    this.setIssueTimeout = function(newIssueTimeout)
+    {
+        issueTimeout = newIssueTimeout;
+        return this;
+    };
+    
+    /**
+     * Get the manual time timeout
+     * 
+     * @return Integer
+     * @public
+     */
+    this.getTimeManualTimeout = function()
+    {
+        return timeManualTimeout;
+    };
+    
+    /**
+     * Set the manual time timeout
+     * 
+     * @param Integer newTimeManualTimeout
+     * @public
+     */
+    this.setTimeManualTimeout = function(newTimeManualTimeout)
+    {
+        timeManualTimeout = newTimeManualTimeout;
+        return this;
+    };
+    
+    /**
+     * Get the logged total
+     * 
+     * @return Object
+     * @public
+     */
+    this.getLoggedTotal = function()
+    {
+        return loggedTotal;
+    };
+    
+    /**
+     * Set the logged total
+     * 
+     * @param Object newLoggedTotal
+     * @public
+     */
+    this.setLoggedTotal = function(newLoggedTotal)
+    {
+        loggedTotal = newLoggedTotal;
+        return this;
     };
 }
 
@@ -83,58 +335,6 @@ App.formatIssueKeyForLog = function(issue)
 };
 
 /*
- * Instances variables
- */
-
-/**
- * @type Config
- * @private
- */
-App.prototype._config = null;
-
-/**
- * @type Jira
- * @private
- */
-App.prototype._jira = null;
-
-/**
- * @type Stopwatch
- * @private
- */
-App.prototype._stopwatch = null;
-
-/**
- * @type ActivityLog
- * @private
- */
-App.prototype._activityLog = null;
-
-/**
- * @type Integer
- * @private
- */
-App.prototype._issueTimeout = null;
-
-/**
- * @type Integer
- * @private
- */
-App.prototype._timeManualTimeout = null;
-
-/**
- * @type Boolean
- * @private
- */
-App.prototype._timeManual = false;
-
-/**
- * @type Object
- * @private
- */
-App.prototype._loggedTotal = null;
-
-/*
  * Instances public methods
  */
 
@@ -147,7 +347,7 @@ App.prototype._loggedTotal = null;
 App.prototype.alertUser = function(message)
 {
     alert(message);
-    this._activityLog.error(message);
+    this.getActivityLog().error(message);
 };
 
 /**
@@ -158,7 +358,7 @@ App.prototype.alertUser = function(message)
  */
 App.prototype.warnUser = function(message)
 {
-    this._activityLog.warn(message);
+    this.getActivityLog().warn(message);
 };
 
 /**
@@ -169,7 +369,7 @@ App.prototype.warnUser = function(message)
  */
 App.prototype.notifyUser = function(message)
 {
-    this._activityLog.info(message);
+    this.getActivityLog().info(message);
 };
 
 /**
@@ -198,11 +398,11 @@ App.prototype.init = function()
         console.log = function() {}
     }
     
-    this._config = new Config();
-    this._config.init();
-    this._jira = new Jira(this._config);
-    this._stopwatch = new Stopwatch();
-    this._activityLog = new ActivityLog(this._config.get('maxLogs', 'jtl'));
+    this.setConfig(new Config());
+    this.getConfig().init();
+    this.setJira(new Jira(this.getConfig()));
+    this.setStopwatch(new Stopwatch());
+    this.setActivityLog(new ActivityLog(this.getConfig().get('maxLogs', 'jtl')));
 };
 
 /**
@@ -213,7 +413,7 @@ App.prototype.init = function()
  */
 App.prototype.checkConfig = function()
 {
-    if (!this._config.ready()) {
+    if (!this.getConfig().ready()) {
         return false;
     }
     var mask = '<div id="mask">'
@@ -221,7 +421,7 @@ App.prototype.checkConfig = function()
     mask += '<img src="app://images/spinner.gif" alt="*" width="16" height="16" /></div>';
     mask += '</div>';
     $('body').append(mask);
-    if (!this._jira.testConnection()) {
+    if (!this.getJira().testConnection()) {
         $('#mask').remove();
         return false;
     }
@@ -289,7 +489,7 @@ App.prototype.logTime = function(time, issue, subtask, close, description)
     
     // If no subtask assume main task
     if (!subtask) {
-        workLogID = this._jira.logTime(time, issue, description);
+        workLogID = this.getJira().logTime(time, issue, description);
         if (!workLogID) {
             this.alertUser('Failed to log '+time+' against '+App.formatIssueKeyForLog(issue)+': no work log was returned by JIRA!');
             return false;
@@ -305,7 +505,7 @@ App.prototype.logTime = function(time, issue, subtask, close, description)
         this.notifyUser(notification);
         
         if (close) {
-            this.resolveCloseIssue(issue, this._config.get('mainTaskCloseTransition'));
+            this.resolveCloseIssue(issue, this.getConfig().get('mainTaskCloseTransition'));
         }
         
         this.addToLoggedTotal(this.jiraTimeToStopwatchTime(time));
@@ -317,7 +517,7 @@ App.prototype.logTime = function(time, issue, subtask, close, description)
     // Subtask
     // First check we're not already on a subtask
     var parentIssue = null;
-    var parentIssueDetails = this._jira.getParent(issue);
+    var parentIssueDetails = this.getJira().getParent(issue);
     if (!parentIssueDetails) {
         parentIssue = issue;
     } else {
@@ -329,9 +529,9 @@ App.prototype.logTime = function(time, issue, subtask, close, description)
         this.notifyUser(App.formatIssueKeyForLog(issue)+' is a sub-task of '+App.formatIssueKeyForLog(parentIssue)+' ('+summary+')');
     }
     
-    var subTaskIssue = this._jira.getIssueSubTask(parentIssue, subtask);
+    var subTaskIssue = this.getJira().getIssueSubTask(parentIssue, subtask);
     if (!subTaskIssue) {
-        subTaskIssue = this._jira.createSubTask(parentIssue, subtask);
+        subTaskIssue = this.getJira().createSubTask(parentIssue, subtask);
         if (!subTaskIssue) {
             this.alertUser('Failed to log '+time+' against '+App.formatIssueKeyForLog(issue)+': no subtask key was returned by JIRA!');
             return false;
@@ -340,7 +540,7 @@ App.prototype.logTime = function(time, issue, subtask, close, description)
         this.notifyUser(subtask+' sub-task ('+App.formatIssueKeyForLog(subTaskIssue)+') was created against '+App.formatIssueKeyForLog(parentIssue));
     }
     
-    workLogID = this._jira.logTime(time, subTaskIssue, description);
+    workLogID = this.getJira().logTime(time, subTaskIssue, description);
     if (!workLogID) {
         this.alertUser('Failed to log '+time+' against '+App.formatIssueKeyForLog(issue)+': no work log was returned by JIRA!');
         return false;
@@ -353,10 +553,10 @@ App.prototype.logTime = function(time, issue, subtask, close, description)
         var transition = '';
         if (subTaskIssue) {
             issueToClose = subTaskIssue;
-            transition = this._config.get('subTaskCloseTransition');
+            transition = this.getConfig().get('subTaskCloseTransition');
         } else {
             issueToClose = issue;
-            transition = this._config.get('mainTaskCloseTransition');            
+            transition = this.getConfig().get('mainTaskCloseTransition');            
         }
         this.resolveCloseIssue(issueToClose, transition);
     }
@@ -376,13 +576,13 @@ App.prototype.logTime = function(time, issue, subtask, close, description)
  */
 App.prototype.resolveCloseIssue = function(issue, transition)
 {
-    var transitionID = this._jira.getTransitionID(issue, transition);
+    var transitionID = this.getJira().getTransitionID(issue, transition);
     if (!transitionID) {
         this.warnUser('Could not find '+transition+' transition in JIRA!\nIt\'s likely that the issue is already resolved/closed.');
         return false;
     }
 
-    var transitionSuccess = this._jira.transitionIssue(issue, transitionID);
+    var transitionSuccess = this.getJira().transitionIssue(issue, transitionID);
     if (!transitionSuccess) {
         this.alertUser('Could not resolve/close '+issue+' in JIRA!');
         return false;
@@ -475,8 +675,8 @@ App.prototype.updateTime = function(time)
  */
 App.prototype.resetTime = function()
 {
-    var currTime = this._stopwatch.getTime();
-    this._stopwatch.restart();
+    var currTime = this.getStopwatch().getTime();
+    this.getStopwatch().restart();
     this.updateTime();
     if (currTime && (currTime.min || currTime.hour)) {
         this.notifyUser('The accrued time has been reset ('+this.stopwatchTimeToJiraTime(currTime)+' dropped)');
@@ -515,66 +715,11 @@ App.prototype.getTimeToLog = function()
         return $('#timeManual').val();
     } else {
         var roundToNearest = 'min';
-        var time = this._stopwatch.getTime(roundToNearest);
+        var time = this.getStopwatch().getTime(roundToNearest);
         var jiraTime = this.stopwatchTimeToJiraTime(time);
 
         return jiraTime;
     }
-};
-
-/**
- * Set whether to use manually entered time
- * 
- * @param Boolean manual
- * @public
- */
-App.prototype.setTimeManual = function(manual)
-{
-    this._timeManual = Boolean(manual);
-};
-
-/**
- * Get whether to use manually entered time
- * 
- * @return Boolean manual
- * @public
- */
-App.prototype.getTimeManual = function(manual)
-{
-    return this._timeManual;
-};
-
-/**
- * Get the config
- * 
- * @returns Config
- * @public
- */
-App.prototype.getConfig = function()
-{
-    return this._config;
-};
-
-/**
- * Get the Jira instance
- * 
- * @returns Jira
- * @public
- */
-App.prototype.getJira = function()
-{
-    return this._jira;
-};
-
-/**
- * Get the stopwatch
- * 
- * @returns Stopwatch
- * @public
- */
-App.prototype.getStopwatch = function()
-{
-    return this._stopwatch;
 };
 
 /**
@@ -585,14 +730,16 @@ App.prototype.getStopwatch = function()
  */
 App.prototype.addToLoggedTotal = function(time)
 {
-    this._loggedTotal.hour += parseInt(time.hour);
+    var loggedTotal = this.getLoggedTotal();
+    loggedTotal.hour += parseInt(time.hour);
     
-    this._loggedTotal.min += parseInt(time.min);
-    if (this._loggedTotal.min >= 60) {
-        this._loggedTotal.min -= 60;
-        this._loggedTotal.hour++;
+    loggedTotal.min += parseInt(time.min);
+    if (loggedTotal.min >= 60) {
+        loggedTotal.min -= 60;
+        loggedTotal.hour++;
     }
     
+    this.setLoggedTotal(loggedTotal);
     this.updateLoggedTotal();
 };
 
@@ -605,7 +752,7 @@ App.prototype.addToLoggedTotal = function(time)
 App.prototype.updateLoggedTotal = function(total)
 {    
     if (!total) {
-        total = this._loggedTotal;
+        total = this.getLoggedTotal();
     }
     
     var jiraTime = this.stopwatchTimeToJiraTime(total);
@@ -622,14 +769,15 @@ App.prototype.updateLoggedTotal = function(total)
  */
 App.prototype.resetLoggedTotal = function()
 {
-    var currTotal = this._loggedTotal;
-    this._loggedTotal = {
+    var currTotal = this.getLoggedTotal();
+    var loggedTotal = {
         "hour": 0,
         "min": 0,
         "sec": 0
     };
-    
+    this.setLoggedTotal(loggedTotal);
     this.updateLoggedTotal();
+    
     if (currTotal && (currTotal.min || currTotal.hour)) {
         this.notifyUser('The total logged time has been reset ('+this.stopwatchTimeToJiraTime(currTotal)+' dropped)');
     }
@@ -642,8 +790,8 @@ App.prototype.resetLoggedTotal = function()
  */
 App.prototype.updateDayGrandTotal = function()
 {
-    var logged = this._loggedTotal;
-    var unlogged = this._stopwatch.getTime();
+    var logged = this.getLoggedTotal();
+    var unlogged = this.getStopwatch().getTime();
     if (!logged || !unlogged) {
         return;
     }
@@ -664,7 +812,8 @@ App.prototype.updateDayGrandTotal = function()
 };
 
 /*
- * Instances private methods
+ * Instance protected methods
+ * No such thing in JavaScript, it's just conceptual
  */
 
 /**
@@ -689,7 +838,7 @@ App.prototype._registerReconfigureListener = function()
  */
 App.prototype._registerBugListener = function()
 {
-    var email = this._getBugReportEmail();
+    var email = this.getBugReportEmail();
     $('#bugButton').click({"email": email}, function()
     {
         var subject = encodeURIComponent('JIRA Time Logger bug report');
@@ -829,12 +978,13 @@ App.prototype._registerTimeClearListener = function()
  */
 App.prototype._registerTimeManualKeyupListener = function()
 {
-    $('#timeManual').keyup(function()
+    var app = this;
+    $('#timeManual').keyup({'app': app}, function()
     {
-        if (this._timeManualTimeout) {
-            clearTimeout(this._timeManualTimeout);
+        if (app.getTimeManualTimeout()) {
+            clearTimeout(app.getTimeManualTimeout());
         }
-        this._timeManualTimeout = setTimeout(function()
+        var timeManualTimeout = setTimeout(function()
         {
             if (!$('#timeManual').val().match(new RegExp(Jira.TIME_REGEX))) {
                 $('#timeManual').parent().parent().parent().addClass('danger');
@@ -842,6 +992,7 @@ App.prototype._registerTimeManualKeyupListener = function()
                 $('#timeManual').parent().parent().parent().removeClass('danger');
             }
         }, 500);
+        app.setTimeManualTimeout(timeManualTimeout);
     });
 };
 
@@ -852,13 +1003,14 @@ App.prototype._registerTimeManualKeyupListener = function()
  */
 App.prototype._registerIssueKeyupListener = function()
 {
-    $('#issue').keyup(function()
+    var app = this;
+    $('#issue').keyup({'app': app}, function()
     {
-        if (this._issueTimeout) {
-            clearTimeout(this._issueTimeout);
+        if (app.getIssueTimeout()) {
+            clearTimeout(app.getIssueTimeout());
         }
         $('#summary').text('Waiting...');
-        this._issueTimeout = setTimeout(function()
+        var issueTimeout = setTimeout(function()
         {
             if (!$('#issue').val().match(new RegExp(Jira.ISSUE_KEY_REGEX)) || $('#issue').val() == '') {
                 $('#issue').parent().addClass('danger');
@@ -875,6 +1027,7 @@ App.prototype._registerIssueKeyupListener = function()
                 $('#summary').text($('#issue').val()+' not found');
             }
         }, 500);
+        app.setIssueTimeout(issueTimeout);
     });
 };
 
@@ -935,13 +1088,13 @@ App.prototype._loadMain = function()
     this._populateSubTaskTypes();
     
     this.resetLoggedTotal();
-    this._stopwatch.registerMinListener(this.updateTime);
+    this.getStopwatch().registerMinListener(this.updateTime);
     this.resetTime();
 };
 
 App.prototype._setVersionInfo = function()
 {
-    var version = this._getVersion();
+    var version = this.getVersion();
     $('#version').text('(v'+version+')');
 }
 
@@ -952,7 +1105,7 @@ App.prototype._setVersionInfo = function()
  */
 App.prototype._populateSubTaskTypes = function()
 {
-    var subTaskTypes = this._jira.getSubTaskTypes();
+    var subTaskTypes = this.getJira().getSubTaskTypes();
     $('#type').empty();
     if (!subTaskTypes) {
         $('#type').append('<option value="ERROR">ERROR</option>\n');

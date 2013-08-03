@@ -284,7 +284,8 @@ Stopwatch.prototype.deductTime = function(time)
 };
 
 /*
- * Instances private methods
+ * Instance protected methods
+ * No such thing in JavaScript, it's just conceptual
  */
 
 /**
