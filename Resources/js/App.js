@@ -1096,7 +1096,7 @@ App.prototype._setVersionInfo = function()
 {
     var version = this.getVersion();
     $('#version').text('(v'+version+')');
-}
+};
 
 /**
  * Populate the subtask types dropdown
