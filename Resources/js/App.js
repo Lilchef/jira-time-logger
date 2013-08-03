@@ -46,29 +46,12 @@ function App()
 /**
  * @constant
  */
-App.LOG_INFO = 'INFO';
-/**
- * @constant
- */
-App.LOG_WARN = 'WARN';
-/**
- * @constant
- */
-App.LOG_MAX_SUMMARY_LENGTH = 20;
-/**
- * @constant
- */
 App.TIME_HOUR_LIMIT = 10;
 
 /**
  * @static
  */
 App._instance = null;
-
-/**
- * @static
- */
-App._maxLogs = 1;
 
 /**
  * Get the singleton instance
@@ -84,43 +67,6 @@ App.getInstance = function()
     }
     
     return App._instance;
-};
-
-/**
- * Alert the user to something (intrusive)
- * 
- * @param String message
- * @static
- */
-App.alertUser = function(message)
-{
-    alert(message);
-    App.notifyUser(message, App.LOG_WARN);
-};
-
-/**
- * Notify the user of something (non-intrusive)
- * 
- * @param String message
- * @param String level One of the App.LOG_* constants
- * @static
- */
-App.notifyUser = function(message, level)
-{
-    message = message.replace(/\n/g, '; ');
-    level = (level) ? level : App.LOG_INFO;
-    var colour = (level == App.LOG_WARN) ? '#b75b5b' : '#5bb75b';
-    
-    var now = new Date();
-    var dateTimeLogged = now.toLocaleString();
-    var userLog = $('<div class="userLog '+level.toLowerCase()+'" title="'+dateTimeLogged+'">'+level+': '+message+'</div>');
-    $('#userLogContainer').prepend(userLog);
-    userLog.css({backgroundColor: colour})
-            .show()
-            .animate({backgroundColor: 'none'}, 1500);
-    if ($('.userLog').length > App._maxLogs) {
-        $('#userLogContainer div:last-child').remove();
-    }
 };
 
 /**
@@ -159,6 +105,12 @@ App.prototype._jira = null;
 App.prototype._stopwatch = null;
 
 /**
+ * @type ActivityLog
+ * @private
+ */
+App.prototype._activityLog = null;
+
+/**
  * @type Integer
  * @private
  */
@@ -187,6 +139,40 @@ App.prototype._loggedTotal = null;
  */
 
 /**
+ * Alert the user to something (intrusive)
+ * 
+ * @param String message
+ * @public
+ */
+App.prototype.alertUser = function(message)
+{
+    alert(message);
+    this._activityLog.error(message);
+};
+
+/**
+ * Warn the user of something (non-intrusive)
+ * 
+ * @param String message
+ * @public
+ */
+App.prototype.warnUser = function(message)
+{
+    this._activityLog.warn(message);
+};
+
+/**
+ * Alert the user to something (non-intrusive)
+ * 
+ * @param String message
+ * @public
+ */
+App.prototype.notifyUser = function(message)
+{
+    this._activityLog.info(message);
+};
+
+/**
  * Initialise the app
  * 
  * @public
@@ -203,6 +189,9 @@ App.prototype.init = function()
     if (!Stopwatch) {
         throw 'App cannot function without Stopwatch';
     }
+    if (!ActivityLog) {
+        throw 'App connot function without ActivityLog';
+    }
     
     // Ensure console.log is defined
     if (!console || !console.log) {
@@ -211,12 +200,9 @@ App.prototype.init = function()
     
     this._config = new Config();
     this._config.init();
-    
     this._jira = new Jira(this._config);
-    
     this._stopwatch = new Stopwatch();
-    
-    App._maxLogs = this._config.get('maxLogs', 'jtl');
+    this._activityLog = new ActivityLog(this._config.get('maxLogs', 'jtl'));
 };
 
 /**
@@ -305,7 +291,7 @@ App.prototype.logTime = function(time, issue, subtask, close, description)
     if (!subtask) {
         workLogID = this._jira.logTime(time, issue, description);
         if (!workLogID) {
-            App.alertUser('Failed to log '+time+' against '+App.formatIssueKeyForLog(issue)+': no work log was returned by JIRA!');
+            this.alertUser('Failed to log '+time+' against '+App.formatIssueKeyForLog(issue)+': no work log was returned by JIRA!');
             return false;
         }
         
@@ -316,7 +302,7 @@ App.prototype.logTime = function(time, issue, subtask, close, description)
             }
             notification += ' ('+summary+')';
         }
-        App.notifyUser(notification);
+        this.notifyUser(notification);
         
         if (close) {
             this.resolveCloseIssue(issue, this._config.get('mainTaskCloseTransition'));
@@ -340,27 +326,27 @@ App.prototype.logTime = function(time, issue, subtask, close, description)
         if (summary.length > App.LOG_MAX_SUMMARY_LENGTH) {
             summary = summary.substring(0, App.LOG_MAX_SUMMARY_LENGTH)+'...';
         }
-        App.notifyUser(App.formatIssueKeyForLog(issue)+' is a sub-task of '+App.formatIssueKeyForLog(parentIssue)+' ('+summary+')');
+        this.notifyUser(App.formatIssueKeyForLog(issue)+' is a sub-task of '+App.formatIssueKeyForLog(parentIssue)+' ('+summary+')');
     }
     
     var subTaskIssue = this._jira.getIssueSubTask(parentIssue, subtask);
     if (!subTaskIssue) {
         subTaskIssue = this._jira.createSubTask(parentIssue, subtask);
         if (!subTaskIssue) {
-            App.alertUser('Failed to log '+time+' against '+App.formatIssueKeyForLog(issue)+': no subtask key was returned by JIRA!');
+            this.alertUser('Failed to log '+time+' against '+App.formatIssueKeyForLog(issue)+': no subtask key was returned by JIRA!');
             return false;
         }
         
-        App.notifyUser(subtask+' sub-task ('+App.formatIssueKeyForLog(subTaskIssue)+') was created against '+App.formatIssueKeyForLog(parentIssue));
+        this.notifyUser(subtask+' sub-task ('+App.formatIssueKeyForLog(subTaskIssue)+') was created against '+App.formatIssueKeyForLog(parentIssue));
     }
     
     workLogID = this._jira.logTime(time, subTaskIssue, description);
     if (!workLogID) {
-        App.alertUser('Failed to log '+time+' against '+App.formatIssueKeyForLog(issue)+': no work log was returned by JIRA!');
+        this.alertUser('Failed to log '+time+' against '+App.formatIssueKeyForLog(issue)+': no work log was returned by JIRA!');
         return false;
     }
 
-    App.notifyUser(time+' was successfully logged against '+subtask+' of '+App.formatIssueKeyForLog(parentIssue));
+    this.notifyUser(time+' was successfully logged against '+subtask+' of '+App.formatIssueKeyForLog(parentIssue));
     
     if (close) {
         var issueToClose = '';
@@ -392,17 +378,17 @@ App.prototype.resolveCloseIssue = function(issue, transition)
 {
     var transitionID = this._jira.getTransitionID(issue, transition);
     if (!transitionID) {
-        App.alertUser('Could not find '+transition+' transition in JIRA!\nCheck the ticket is in a resolve/closeable status.');
+        this.warnUser('Could not find '+transition+' transition in JIRA!\nIt\'s likely that the issue is already resolved/closed.');
         return false;
     }
 
     var transitionSuccess = this._jira.transitionIssue(issue, transitionID);
     if (!transitionSuccess) {
-        App.alertUser('Could not resolve/close '+issue+' in JIRA!');
+        this.alertUser('Could not resolve/close '+issue+' in JIRA!');
         return false;
     }
     
-    App.notifyUser(App.formatIssueKeyForLog(issue)+' was successfully resolved/closed');
+    this.notifyUser(App.formatIssueKeyForLog(issue)+' was successfully resolved/closed');
     return true;
 };
 
@@ -493,7 +479,7 @@ App.prototype.resetTime = function()
     this._stopwatch.restart();
     this.updateTime();
     if (currTime && (currTime.min || currTime.hour)) {
-        App.notifyUser('The accrued time has been reset ('+this.stopwatchTimeToJiraTime(currTime)+' dropped)');
+        this.notifyUser('The accrued time has been reset ('+this.stopwatchTimeToJiraTime(currTime)+' dropped)');
     }
     
     // If it looks like the time logger's been running overnight offer to reset the day total
@@ -645,7 +631,7 @@ App.prototype.resetLoggedTotal = function()
     
     this.updateLoggedTotal();
     if (currTotal && (currTotal.min || currTotal.hour)) {
-        App.notifyUser('The total logged time has been reset ('+this.stopwatchTimeToJiraTime(currTotal)+' dropped)');
+        this.notifyUser('The total logged time has been reset ('+this.stopwatchTimeToJiraTime(currTotal)+' dropped)');
     }
 };
 
@@ -763,7 +749,7 @@ App.prototype._registerFormListener = function()
         }
 
         if (errors.length > 0) {
-            App.alertUser(errors.join('\n'));
+            app.alertUser(errors.join('\n'));
             return false;
         }
 
@@ -970,7 +956,7 @@ App.prototype._populateSubTaskTypes = function()
     $('#type').empty();
     if (!subTaskTypes) {
         $('#type').append('<option value="ERROR">ERROR</option>\n');
-        App.alertUser('Could not load subtask types from JIRA!');
+        this.alertUser('Could not load subtask types from JIRA!');
         Ti.App.exit();
         return;
     }
