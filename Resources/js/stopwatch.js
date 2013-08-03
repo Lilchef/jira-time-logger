@@ -237,9 +237,13 @@ Stopwatch.prototype.deductTime = function(time)
         secChanged = true;
         
         if (this._time.sec < 0) {
-            this._time.sec += 60;
-            this._time.min--;
-            minChanged = true;
+            if (this._time.min > 0) {
+                this._time.sec += 60;
+                this._time.min--;
+                minChanged = true;
+            } else {
+                this._time.sec = 0;
+            }
         }
     }
     if (time.min) {
@@ -247,9 +251,13 @@ Stopwatch.prototype.deductTime = function(time)
         minChanged = true;
         
         if (this._time.min < 0) {
-            this._time.min += 60;
-            this._time.hour--;
-            hourChanged = true;
+            if (this._time.hour > 0) {
+                this._time.min += 60;
+                this._time.hour--;
+                hourChanged = true;
+            } else {
+                this._time.min = 0;
+            }
         }        
     }
     if (time.hour) {
