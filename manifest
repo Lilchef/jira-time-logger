@@ -1,7 +1,7 @@
 #appname:JIRA Time Logger
 #appid:uk.co.aaronbaker.jtl
 #publisher:Aaron Baker
-#image:jira_time_logger_logo.png
+#image:default_app_logo.png
 #url:http://www.aaronbaker.co.uk
 #guid:8f961dc3-6f30-4c9a-8318-21a1b775bede
 #desc:Easily log time against a JIRA install

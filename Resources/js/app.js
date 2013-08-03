@@ -230,7 +230,11 @@ App.prototype.checkConfig = function()
     if (!this._config.ready()) {
         return false;
     }
-    $('body').append('<div id="mask"><div id="maskText">Testing JIRA connection, please wait</div></div>');
+    var mask = '<div id="mask">'
+    mask += '<div id="maskText">Testing JIRA connection, please wait<br />';
+    mask += '<img src="app://images/spinner.gif" alt="*" width="16" height="16" /></div>';
+    mask += '</div>';
+    $('body').append(mask);
     if (!this._jira.testConnection()) {
         $('#mask').remove();
         return false;
