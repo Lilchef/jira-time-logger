@@ -119,7 +119,7 @@ App.notifyUser = function(message, level)
             .show()
             .animate({backgroundColor: 'none'}, 1500);
     if ($('.userLog').length > App._maxLogs) {
-        $('#userLogContainer :last-child').remove();
+        $('#userLogContainer div:last-child').remove();
     }
 };
 
