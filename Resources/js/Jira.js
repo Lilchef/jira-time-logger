@@ -15,9 +15,130 @@
  * @param Config config
  * @constructor
  */
-function Jira(config)
+function Jira(newConfig)
 {
-    Jira.prototype._config = config;
+    /**
+     * @type Config
+     * @private
+     */
+    var config = null;
+    /**
+     * @type Array
+     * @private
+     */
+    var issueTypes = [];
+    /**
+     * @type Object
+     * @private
+     */
+    var transitions = {};
+    /**
+     * @type Object
+     * @private
+     */
+    var ajaxValues = {};
+    
+    /**
+     * Get the config object
+     * 
+     * @returns Config
+     */
+    this.getConfig = function()
+    {
+        return config;
+    };
+    
+    /**
+     * Set the config object
+     * 
+     * @param Config
+     */
+    this.setConfig = function(newConfig)
+    {
+        if (!(newConfig instanceof Config)) {
+            throw 'Jira.setConfig called with non-Config';
+        }
+        config = newConfig;
+        return this;
+    };
+    
+    /**
+     * Get the issue types
+     * 
+     * @returns Array
+     */
+    this.getIssueTypes = function()
+    {
+        return issueTypes;
+    };
+    
+    /**
+     * Set the issue types
+     * 
+     * @param Array
+     */
+    this.setIssueTypes = function(newIssueTypes)
+    {
+        if (!(newIssueTypes instanceof Array)) {
+            throw 'Jira.setIssueTypes called with non-Array';
+        }
+        issueTypes = newIssueTypes;
+        return this;
+    };
+
+    /**
+     * Get an ajax value
+     * 
+     * @param String key
+     * @returns mix
+     */
+    this.getAjaxValue = function(key)
+    {
+        if (!ajaxValues[key]) {
+            return null;
+        }
+        return ajaxValues[key];
+    };
+
+    /**
+     * Set an ajax value
+     * 
+     * @param String key
+     * @param mix value
+     */
+    this.setAjaxValue = function(key, value)
+    {
+        ajaxValues[key] = value;
+        return this;
+    };
+    
+    /**
+     * Get an issue transition ID
+     * 
+     * @param String transition
+     * @returns String
+     */
+    this.getTransition = function(transition)
+    {
+        if (!transitions[transition]) {
+            return null;
+        }
+        return transitions[transition];
+    };
+    
+    /**
+     * Set an issue transition
+     * 
+     * @param String transition
+     * @param String id
+     */
+    this.setTransition = function(transition, id)
+    {
+        transitions[transition] = id;
+        return this;
+    };
+    
+    this.setConfig(newConfig);
 }
 
 /*
@@ -86,28 +207,6 @@ Jira.TYPES_INC_SUBTASKS_ONLY = 1;
 Jira.TYPES_INC_SUBTASKS_YES = 2;
 
 /*
- * Instance varaibles
- */
-
-/**
- * @type Array
- * @private
- */
-Jira.prototype._types = [];
-
-/**
- * @type Object
- * @private
- */
-Jira.prototype._ajaxValues = {};
-
-/**
- * @type Object
- * @private
- */
-Jira.prototype._transitions = {};
-
-/*
  * Instance public methods
  */
 
@@ -119,16 +218,16 @@ Jira.prototype._transitions = {};
  */
 Jira.prototype.testConnection = function()
 {
-    this._ajaxValues.connectionSuccess = false;
+    this.setAjaxValue('connectionSuccess', false);
     this._makeRequest(Jira.URL_SERVER_INFO, {}, Jira.REQUEST_GET, function()
     {
-        this._ajaxValues.connectionSuccess = true;
+        this.setAjaxValue('connectionSuccess', true);
     }, function()
     {
         // Default is failure so do nothing
     });
     
-    return this._ajaxValues.connectionSuccess;
+    return this.getAjaxValue('connectionSuccess');
 };
 
 /**
@@ -140,39 +239,43 @@ Jira.prototype.testConnection = function()
  */
 Jira.prototype.getIssueTypes = function(subTasks)
 {
-    if (!this._types || this._types.length == 0) {
-        this._ajaxValues.types = null;
+    var issueTypes = this.getIssueTypes();
+    if (!issueTypes || issueTypes.length == 0) {
+        this.setAjaxValue('types', null);
         var data = {};
         this._makeRequest(Jira.URL_ISSUE_TYPES, data, Jira.REQUEST_GET, function(data) {
             if (data.length > 0) {
-                this._ajaxValues.types = [];
-                this._ajaxValues.types[Jira.TYPES_INC_SUBTASKS_NO] = {};
-                this._ajaxValues.types[Jira.TYPES_INC_SUBTASKS_ONLY] = {};
-                this._ajaxValues.types[Jira.TYPES_INC_SUBTASKS_YES] = {};
+                var types = [];
+                types[Jira.TYPES_INC_SUBTASKS_NO] = {};
+                types[Jira.TYPES_INC_SUBTASKS_ONLY] = {};
+                types[Jira.TYPES_INC_SUBTASKS_YES] = {};
                 for (var index in data) {
                     var typeID = data[index].id;
                     var typeName = data[index].name;
                     var key = Jira.TYPES_INC_SUBTASKS_NO;
                     if (data[index].subtask) {
                         key = Jira.TYPES_INC_SUBTASKS_ONLY;
-                        if ($.inArray(typeName, this._config.get('subTaskTypeExclusions')) >= 0) {
+                        if ($.inArray(typeName, this.getConfig().get('subTaskTypeExclusions')) >= 0) {
                             continue;
                         }
                     }
-                    this._ajaxValues.types[key][typeID] = typeName;
-                    this._ajaxValues.types[Jira.TYPES_INC_SUBTASKS_YES][typeID] = typeName;
+                    types[key][typeID] = typeName;
+                    types[Jira.TYPES_INC_SUBTASKS_YES][typeID] = typeName;
                 }
+                
+                this.setAjaxValue('types', types);
             }
         });
         
-        this._types = this._ajaxValues.types;
+        issueTypes = this.getAjaxValue('types');
+        this.setIssueTypes(issueTypes);
     }
     
-    if (!this._types[subTasks]) {
+    if (!issueTypes[subTasks]) {
         return null;
     }
     
-    return this._types[subTasks];
+    return issueTypes[subTasks];
 };
 
 /**
@@ -200,27 +303,27 @@ Jira.prototype.getTransitionID = function(issue, transition)
     // TODO: Transitions are usually specific to projects but that's not always the case
     var transitionKey = issue.substring(0, issue.indexOf('-'))+':'+transition;
     
-    if (!this._transitions[transitionKey]) {
-        this._ajaxValues.requestedTransitionName = transition;
-        this._ajaxValues.requestedTransitionID = null;
+    if (!this.getTransition(transitionKey)) {
+        this.setAjaxValue('requestedTransitionName', transition);
+        this.setAjaxValue('requestedTransitionID', null);
         var url = Jira.URL_TRANSITION.replace('{issue}', issue);
         var data = {};
 
         this._makeRequest(url, data, Jira.REQUEST_GET, function(data) {
             if (data.transitions && data.transitions.length > 0) {
                 for (var index in data.transitions) {
-                    if (data.transitions[index].name == this._ajaxValues.requestedTransitionName) {
-                        this._ajaxValues.requestedTransitionID = data.transitions[index].id;
+                    if (data.transitions[index].name == this.getAjaxValue('requestedTransitionName')) {
+                        this.setAjaxValue('requestedTransitionID', data.transitions[index].id);
                         return;
                     }
                 }
             }
         });
         
-        this._transitions[transitionKey] = this._ajaxValues.requestedTransitionID;
+        this.setTransition(transitionKey, this.getAjaxValue('requestedTransitionID'));
     }
     
-    return this._transitions[transitionKey];
+    return this.getTransition(transitionKey);
 };
 
 /**
@@ -234,7 +337,7 @@ Jira.prototype.getTransitionID = function(issue, transition)
  */
 Jira.prototype.logTime = function(time, issue, description)
 {
-    this._ajaxValues.workLogID = null;
+    this.setAjaxValue('workLogID', null);
     
     var url = Jira.URL_LOG_WORK.replace('{issue}', issue);
     var now = new Date();
@@ -252,10 +355,10 @@ Jira.prototype.logTime = function(time, issue, description)
             return;
         }
         
-        this._ajaxValues.workLogID = data.id;
+        this.setAjaxValue('workLogID', data.id);
     });
 
-    return this._ajaxValues.workLogID;
+    return this.getAjaxValue('workLogID');
 };
 
 /**
@@ -266,7 +369,7 @@ Jira.prototype.logTime = function(time, issue, description)
  */
 Jira.prototype.getParent = function(issue)
 {
-    this._ajaxValues.requestedSubTaskParent = null;
+    this.setAjaxValue('requestedSubTaskParent', null);
     
     // Get the details of the issue
     var url = Jira.URL_GET_ISSUE.replace('{issue}', issue);
@@ -274,10 +377,10 @@ Jira.prototype.getParent = function(issue)
         if (!data.fields.parent) {
             return;
         }
-        this._ajaxValues.requestedSubTaskParent = data.fields.parent;
+        this.setAjaxValue('requestedSubTaskParent', data.fields.parent);
     });
     
-    return this._ajaxValues.requestedSubTaskParent;
+    return this.getAjaxValue('requestedSubTaskParent');
 };
 
 /**
@@ -290,8 +393,8 @@ Jira.prototype.getParent = function(issue)
  */
 Jira.prototype.getIssueSubTask = function(issue, type)
 {
-    this._ajaxValues.requestedSubTaskType = type;
-    this._ajaxValues.requestedSubTaskIssue = null;
+    this.setAjaxValue('requestedSubTaskType', type);
+    this.setAjaxValue('requestedSubTaskIssue', null);
     
     // Get the details of the main issue
     var url = Jira.URL_GET_ISSUE.replace('{issue}', issue)+'?expand=subtasks';
@@ -300,14 +403,14 @@ Jira.prototype.getIssueSubTask = function(issue, type)
             return;
         }
         for (var index in data.fields.subtasks) {
-            if (data.fields.subtasks[index].fields.issuetype.name == this._ajaxValues.requestedSubTaskType) {
-                this._ajaxValues.requestedSubTaskIssue = data.fields.subtasks[index].key;
+            if (data.fields.subtasks[index].fields.issuetype.name == this.getAjaxValue('requestedSubTaskType')) {
+                this.setAjaxValue('requestedSubTaskIssue', data.fields.subtasks[index].key);
                 return;
             }
         }
     });
     
-    return this._ajaxValues.requestedSubTaskIssue;
+    return this.getAjaxValue('requestedSubTaskIssue');
 };
 
 /**
@@ -320,7 +423,7 @@ Jira.prototype.getIssueSubTask = function(issue, type)
  */
 Jira.prototype.createSubTask = function(issue, type)
 {
-    this._ajaxValues.requestedSubTaskIssue = null;
+    this.setAjaxValue('requestedSubTaskIssue', null);
     
     var url = Jira.URL_CREATE_ISSUE;
     var now = new Date();
@@ -347,10 +450,10 @@ Jira.prototype.createSubTask = function(issue, type)
             return;
         }
         
-        this._ajaxValues.requestedSubTaskIssue = data.key;
+        this.setAjaxValue('requestedSubTaskIssue', data.key);
     });
     
-    return this._ajaxValues.requestedSubTaskIssue;
+    return this.getAjaxValue('requestedSubTaskIssue');
 };
 
 /**
@@ -363,7 +466,7 @@ Jira.prototype.createSubTask = function(issue, type)
  */
 Jira.prototype.transitionIssue = function(issue, transition)
 {
-    this._ajaxValues.transitionSuccess = false;
+    this.setAjaxValue('transitionSuccess', false);
     
     var url = Jira.URL_TRANSITION.replace('{issue}', issue);
 
@@ -374,10 +477,10 @@ Jira.prototype.transitionIssue = function(issue, transition)
     };
 
     this._makeRequest(url, data, Jira.REQUEST_POST, function(data) {
-        this._ajaxValues.transitionSuccess = true;
+        this.setAjaxValue('transitionSuccess', true);
     });
     
-    return this._ajaxValues.transitionSuccess;
+    return this.getAjaxValue('transitionSuccess');
 };
 
 /**
@@ -389,13 +492,13 @@ Jira.prototype.transitionIssue = function(issue, transition)
 Jira.prototype.getIssueSummary = function(issue)
 {
     // Get the details of the issue
-    this._ajaxValues.requestedIssue = null;
+    this.setAjaxValue('requestedIssue', null);
     var url = Jira.URL_GET_ISSUE.replace('{issue}', issue)+'?fields=summary,description';
     this._makeRequest(url, null, Jira.REQUEST_GET, function(data) {
-        this._ajaxValues.requestedIssue = data;
+        this.setAjaxValue('requestedIssue', data);
     });
     
-    return this._ajaxValues.requestedIssue;
+    return this.getAjaxValue('requestedIssue');
 };
 
 /*
@@ -415,15 +518,15 @@ Jira.prototype.getIssueSummary = function(issue)
  */
 Jira.prototype._makeRequest = function(urlSlug, data, type, success, failure)
 {   
-    var urlBase = this._config.get('urlBase').replace(/\/$/, '');
-    var urlApi = this._config.get('urlApi');
+    var urlBase = this.getConfig().get('urlBase').replace(/\/$/, '');
+    var urlApi = this.getConfig().get('urlApi');
     urlSlug = urlSlug.replace(/^\//, '');
     type = (type) ? type : Jira.REQUEST_GET;
     success = (success) ? success : function() {};
     failure = (failure) ? failure : this._requestFailure;
     
     var urlFull = urlBase+urlApi+urlSlug;
-    var authBase64 = $.base64.encode(this._config.get('username')+':'+this._config.get('password'));
+    var authBase64 = $.base64.encode(this.getConfig().get('username')+':'+this.getConfig().get('password'));
     var headerAuth = 'Basic '+authBase64;
 
     $.ajax({

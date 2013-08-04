@@ -346,7 +346,12 @@ App.formatIssueKeyForLog = function(issue)
  */
 App.prototype.alertUser = function(message)
 {
-    alert(message);
+    // Strip tags for the alert box
+    var tmp = document.createElement("DIV");
+    tmp.innerHTML = message;
+    var plainTextMessage = tmp.textContent || tmp.innerText || "";
+    
+    alert(plainTextMessage);
     this.getActivityLog().error(message);
 };
 
@@ -671,14 +676,15 @@ App.prototype.updateTime = function(time)
 /**
  * Reset the automatic timer
  * 
+ * @param Boolean log Log the fact the time was reset?
  * @public
  */
-App.prototype.resetTime = function()
+App.prototype.resetTime = function(log)
 {
     var currTime = this.getStopwatch().getTime();
     this.getStopwatch().restart();
     this.updateTime();
-    if (currTime && (currTime.min || currTime.hour)) {
+    if (log && currTime && (currTime.min || currTime.hour)) {
         this.notifyUser('The accrued time has been reset ('+this.stopwatchTimeToJiraTime(currTime)+' dropped)');
     }
     
@@ -686,7 +692,7 @@ App.prototype.resetTime = function()
     if (currTime.hour >= App.TIME_HOUR_LIMIT) {
         var resetLoggedTotal = confirm("It looks like this is a new day,\ndo you want to reset the logged total as well?");
         if (resetLoggedTotal) {
-            this.resetLoggedTotal();
+            this.resetLoggedTotal(log);
         }
     }
 };
@@ -711,7 +717,7 @@ App.prototype.deductTime = function(time)
  */
 App.prototype.getTimeToLog = function()
 {
-    if (this._timeManual) {
+    if (this.getTimeManual()) {
         return $('#timeManual').val();
     } else {
         var roundToNearest = 'min';
@@ -765,9 +771,10 @@ App.prototype.updateLoggedTotal = function(total)
 /**
  * Reset the daily total
  * 
+ * @param Boolean log Log the fact the time was reset?
  * @private
  */
-App.prototype.resetLoggedTotal = function()
+App.prototype.resetLoggedTotal = function(log)
 {
     var currTotal = this.getLoggedTotal();
     var loggedTotal = {
@@ -778,7 +785,7 @@ App.prototype.resetLoggedTotal = function()
     this.setLoggedTotal(loggedTotal);
     this.updateLoggedTotal();
     
-    if (currTotal && (currTotal.min || currTotal.hour)) {
+    if (log && currTotal && (currTotal.min || currTotal.hour)) {
         this.notifyUser('The total logged time has been reset ('+this.stopwatchTimeToJiraTime(currTotal)+' dropped)');
     }
 };
@@ -966,7 +973,7 @@ App.prototype._registerTimeClearListener = function()
             $(this).text('Reset');
             app.setTimeManual(false);
         } else {
-            app.resetTime();
+            app.resetTime(true);
         }
     });
 };
@@ -1056,7 +1063,7 @@ App.prototype._registerResetLoggedTotalClickListener = function()
     var app = this;
     $('#resetLoggedTotalButton').click({"app": app}, function()
     {
-        app.resetLoggedTotal();
+        app.resetLoggedTotal(true);
     });
 };
 
