@@ -14,6 +14,78 @@
  */
 function Config()
 {
+    /**
+     * @type Object
+     * @private
+     */
+    var json = {};
+    /**
+     * @type Array
+     * @private
+     */
+    var requiredConfigs = ["urlBase", "urlApi", "username", "password"];
+    /**
+     * @type Array
+     * @private
+     */
+    var submitListeners = [];
+    
+    /**
+     * Get the config JSON
+     * 
+     * @returns Object
+     * @public
+     */
+    this.getJson = function()
+    {
+        return json;
+    };
+    
+    /**
+     * Set the config JSON
+     * 
+     * @param Object newJson
+     * @public
+     */
+    this.setJson = function(newJson)
+    {
+        json = newJson;
+        return this;
+    };
+    
+    /**
+     * Get the config options that are required
+     * 
+     * @returns Array
+     * @public
+     */
+    this.getRequiredConfigs = function()
+    {
+        return requiredConfigs;
+    };
+    
+    /**
+     * Get submit listeners
+     * 
+     * @return Array
+     * @public
+     */
+    this.getSubmitListeners = function()
+    {
+        return submitListeners;
+    };
+    
+    /**
+     * Add a submit listener
+     * 
+     * @param function listener
+     * @public
+     */
+    this.addSubmitListener = function(listener)
+    {
+        submitListeners.push(listener);
+        return this;
+    };
 }
 
 /*
@@ -29,22 +101,6 @@ function Config()
 Config.alertUser = function(message) {
     alert(message);
 };
-
-/*
- * Instances variables
- */
-
-/**
- * @type Object
- * @private
- */
-Config.prototype._json = {};
-
-/**
- * @type Array
- * @private
- */
-Config.prototype._submitListeners = [];
 
 /*
  * Instance public methods
@@ -69,9 +125,10 @@ Config.prototype.init = function()
  */
 Config.prototype.ready = function()
 {
-    var requiredConfigs = ["urlBase", "urlApi", "username", "password"];
+    var requiredConfigs = this.getRequiredConfigs();
+    var json = this.getJson();
     for (var key in requiredConfigs) {
-        if (!this._json.jira[requiredConfigs[key]]) {
+        if (!json.jira[requiredConfigs[key]]) {
             return false;
         }
     }
@@ -86,8 +143,9 @@ Config.prototype.ready = function()
  */
 Config.prototype.populateForm = function()
 {
-    for (var key in this._json.jira) {
-        if (this._json.jira[key] && $('#'+key).length == 1) {
+    var json = this.getJson();
+    for (var key in json.jira) {
+        if (json.jira[key] && $('#'+key).length == 1) {
             var val = this.get(key);
             if (val instanceof Array) {
                 val = val.join(', ');
@@ -110,7 +168,7 @@ Config.prototype.registerSubmitListener = function(listener)
         throw "Invalid argument: Config.registerSubmitListener() requires a callable function";
     }
     
-    this._submitListeners.push(listener);
+    this.addSubmitListener(listener);
 };
 
 /**
@@ -125,11 +183,12 @@ Config.prototype.get = function(attribute, section)
 {
     section = (section) ? section : 'jira';
     
-    if (!this._json[section] || !this._json[section][attribute]) {
+    var json = this.getJson();
+    if (!json[section] || !json[section][attribute]) {
         throw 'Unknown config requested: '+section+':'+attribute;
     }
 
-    var val = this._json[section][attribute];
+    var val = json[section][attribute];
     // If its password that's been requested decode it
     if (attribute == 'password') {
         val = $.base64.decode(val);
@@ -149,7 +208,9 @@ Config.prototype.get = function(attribute, section)
 Config.prototype.set = function(attribute, value, section)
 {
     section = (section) ? section : 'jira';
-    this._json[section][attribute] = value;
+    var json = this.getJson();
+    json[section][attribute] = value;
+    this.setJson(json);
 };
 
 /**
@@ -161,7 +222,7 @@ Config.prototype.save = function()
 {
     var customDocument = Ti.Filesystem.getFile(Ti.Filesystem.getApplicationDataDirectory(),'config/config.json');
     customDocument.open(Ti.Filesystem.MODE_WRITE);
-    customDocument.write(JSON.stringify(this._json));
+    customDocument.write(JSON.stringify(this.getJson()));
 };
 
 /*
@@ -191,31 +252,32 @@ Config.prototype._loadJson = function()
         }
         baseDocument.copy(Ti.Filesystem.getApplicationDataDirectory()+'/config/config.json');
         
-        this._json = JSON.parse(customDocument.read().toString());
+        this.setJson(JSON.parse(customDocument.read().toString()));
         
     // Otherwise compare it to the base config to see if anything's missing
     } else {
-        this._json = JSON.parse(customDocument.read().toString());
+        var json = JSON.parse(customDocument.read().toString());
         
         var baseJson = JSON.parse(baseDocument.read().toString());
         var changes = false;
         // TODO: this method expects there to only be two levels of config, make it recursive
         for (var key in baseJson) {
-            if (!this._json[key]) {
-                this._json[key] = baseJson[key];
+            if (!json[key]) {
+                json[key] = baseJson[key];
                 changes = true;
                 continue;
             }
             for (var subKey in baseJson[key]) {
-                if (!this._json[key][subKey]) {
-                    this._json[key][subKey] = baseJson[key][subKey];
+                if (!json[key][subKey]) {
+                    json[key][subKey] = baseJson[key][subKey];
                     changes = true;
                 }
             }
         }
         
+        this.setJson(json);
         if (changes) {
-            customDocument.write(JSON.stringify(this._json));
+            customDocument.write(JSON.stringify(this.getJson()));
         }
     }
 };
@@ -273,9 +335,10 @@ Config.prototype._registerFormListener = function()
         config.save();
 
         // Done, notify listeners
-        if (config._submitListeners.length > 0) {
-            for (var count = 0; count < config._submitListeners.length; count++) {
-                var listener = config._submitListeners[count];
+        var submitListeners = config.getSubmitListeners();
+        if (submitListeners.length > 0) {
+            for (var count = 0; count < submitListeners.length; count++) {
+                var listener = submitListeners[count];
                 listener();
             }
         }

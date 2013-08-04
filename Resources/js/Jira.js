@@ -222,9 +222,10 @@ Jira.prototype.testConnection = function()
     this._makeRequest(Jira.URL_SERVER_INFO, {}, Jira.REQUEST_GET, function()
     {
         this.setAjaxValue('connectionSuccess', true);
-    }, function()
+    }, function(xhr, status, ex)
     {
         // Default is failure so do nothing
+        console.log('Connection to JIRA failed: '+status+', '+ex);
     });
     
     return this.getAjaxValue('connectionSuccess');
