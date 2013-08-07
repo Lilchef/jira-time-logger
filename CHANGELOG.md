@@ -1,4 +1,14 @@
 # Changelog #
+## 0.4 Beta ##
+### Bug fixes ###
+* When more time is logged manually then has elapsed the time now correctly resets to zero
+* Hyper-links in the activity log no longer disappear after the maximum log entries is hit
+
+### Updates / New features ###
+* Connection to JIRA is tested on startup and on re-configure
+* Time / total logged resets are now added to the activity log
+* Various code improvements
+
 ## 0.3 Beta ##
 ### Bug fixes ###
 * Leftover seconds when time is logged are no longer lost
