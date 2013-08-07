@@ -65,7 +65,7 @@ function App()
      */
     var timeManualTimeout = null;
     /**
-     * @type Object
+     * @type StopwatchTime
      * @private
      */
     var loggedTotal = null;
@@ -270,7 +270,7 @@ function App()
     /**
      * Get the logged total
      * 
-     * @return Object
+     * @return StopwatchTime
      * @public
      */
     this.getLoggedTotal = function()
@@ -281,11 +281,14 @@ function App()
     /**
      * Set the logged total
      * 
-     * @param Object newLoggedTotal
+     * @param StopwatchTime newLoggedTotal
      * @public
      */
     this.setLoggedTotal = function(newLoggedTotal)
     {
+        if (!(newLoggedTotal instanceof StopwatchTime)) {
+            throw 'App.setLoggedTotal called with non-StopwatchTime';
+        }
         loggedTotal = newLoggedTotal;
         return this;
     };
@@ -302,6 +305,7 @@ App.TIME_HOUR_LIMIT = 10;
 
 /**
  * @static
+ * @private
  */
 App._instance = null;
 
@@ -310,6 +314,7 @@ App._instance = null;
  * 
  * @static
  * @returns App
+ * @public
  */
 App.getInstance = function()
 {
@@ -328,6 +333,7 @@ App.getInstance = function()
  * 
  * @param String JIRA issue key
  * @returns String
+ * @public
  */
 App.formatIssueKeyForLog = function(issue)
 {
@@ -600,11 +606,15 @@ App.prototype.resolveCloseIssue = function(issue, transition)
 /**
  * Convert a Stopwatch time object to a JIRA time string
  * 
- * @param Object time
+ * @param StopwatchTime time
  * @returns String
  */
 App.prototype.stopwatchTimeToJiraTime = function(time)
 {
+    if (!(time instanceof StopwatchTime)) {
+        throw 'App.stopwatchTimeToJiraTime called with non-StopwatchTime';
+    }
+    
     var jiraTime = '';
     if (time.hour) {
         jiraTime = time.hour+'h ';
@@ -618,15 +628,11 @@ App.prototype.stopwatchTimeToJiraTime = function(time)
  * Convert a JIRA time string to a Stopwatch time object
  * 
  * @param String time
- * @returns Object
+ * @returns StopwatchTime
  */
 App.prototype.jiraTimeToStopwatchTime = function(time)
 {
-    var stopwatchTime = {
-        "hour": 0,
-        "min": 0,
-        "sec": 0
-    };
+    var stopwatchTime = new StopwatchTime();
     
     var timeParts = time.match(new RegExp(Jira.TIME_REGEX));
     if (timeParts[1]) {
@@ -777,11 +783,7 @@ App.prototype.updateLoggedTotal = function(total)
 App.prototype.resetLoggedTotal = function(log)
 {
     var currTotal = this.getLoggedTotal();
-    var loggedTotal = {
-        "hour": 0,
-        "min": 0,
-        "sec": 0
-    };
+    var loggedTotal = new StopwatchTime();
     this.setLoggedTotal(loggedTotal);
     this.updateLoggedTotal();
     
@@ -802,7 +804,7 @@ App.prototype.updateDayGrandTotal = function()
     if (!logged || !unlogged) {
         return;
     }
-    var grandTotal = {};
+    var grandTotal = new StopwatchTime();
     grandTotal.min = logged.min;
     grandTotal.hour = logged.hour;
     

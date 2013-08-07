@@ -14,8 +14,12 @@
  */
 function Stopwatch()
 {
+    if (!StopwatchTime) {
+        throw 'Stopwatch cannot function without StopwatchTime';
+    }
+    
     /**
-     * @type Object
+     * @type StopwatchTime
      */
     var time = null;
     /**
@@ -38,7 +42,7 @@ function Stopwatch()
     /**
      * Get the time
      * 
-     * @returns Object
+     * @returns StopwatchTime
      * @public
      */
     this.getTime = function()
@@ -49,13 +53,13 @@ function Stopwatch()
     /**
      * Set the time
      * 
-     * @param Object newTime
+     * @param StopwatchTime newTime
      * @public
      */
     this.setTime = function(newTime)
     {
-        if (!(newTime instanceof Object)) {
-            throw 'Stopwatch.setTime called with non-Object';
+        if (!(newTime instanceof StopwatchTime)) {
+            throw 'Stopwatch.setTime called with non-StopwatchTime';
         }
         time = newTime;
         return this;
@@ -267,11 +271,7 @@ Stopwatch.prototype.stop = function(reset)
  */
 Stopwatch.prototype.reset = function()
 {
-    var time = {
-        "sec": 0,
-        "min": 0,
-        "hour": 0
-    };
+    var time = new StopwatchTime();
     this.setTime(time);
     
     return this;
