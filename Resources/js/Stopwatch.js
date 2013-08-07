@@ -14,87 +14,204 @@
  */
 function Stopwatch()
 {
+    /**
+     * @type Object
+     */
+    var time = null;
+    /**
+     * @type Integer
+     */
+    var interval = null;
+    /**
+     * @type Array
+     */
+    var secListeners = [];
+    /**
+     * @type Array
+     */
+    var minListeners = [];
+    /**
+     * @type Array
+     */
+    var hourListeners = [];
+    
+    /**
+     * Get the time
+     * 
+     * @returns Object
+     * @public
+     */
+    this.getTime = function()
+    {
+        return time;
+    };
+    
+    /**
+     * Set the time
+     * 
+     * @param Object newTime
+     * @public
+     */
+    this.setTime = function(newTime)
+    {
+        if (!(newTime instanceof Object)) {
+            throw 'Stopwatch.setTime called with non-Object';
+        }
+        time = newTime;
+        return this;
+    };
+    
+    /**
+     * Get the interval identifier
+     * 
+     * @returns Integer
+     * @public
+     */
+    this.getInterval = function()
+    {
+        return interval;
+    };
+    
+    /**
+     * Set the interval identifier
+     * 
+     * @param Integer newInterval
+     * @public
+     */
+    this.setInterval = function(newInterval)
+    {
+        interval = newInterval;
+        return this;
+    };
+    
+    /**
+     * Clear the interval identifier
+     * 
+     * @public
+     */
+    this.clearInterval = function()
+    {
+        interval = null;
+        return this;
+    };
+    
+    /**
+     * Get the second listeners
+     * 
+     * @returns Array
+     * @public
+     */
+    this.getSecListeners = function()
+    {
+        return secListeners;
+    };
+    
+    /**
+     * Add a second listener
+     * 
+     * @param function
+     * @public
+     */
+    this.addSecListener = function(listener)
+    {
+        if (!(listener instanceof Function)) {
+            throw 'Stopwatch.addListener called with non-Function';
+        }
+        secListeners.push(listener);
+        return this;
+    };
+    
+    /**
+     * Check if there are some second listeners
+     * 
+     * @returns Boolean
+     * @public
+     */
+    this.hasSecListeners = function()
+    {
+        return (secListeners.length > 0);
+    };
+    
+    /**
+     * Get the minute listeners
+     * 
+     * @returns Array
+     * @public
+     */
+    this.getMinListeners = function()
+    {
+        return minListeners;
+    };
+    
+    /**
+     * Add a minute listener
+     * 
+     * @param function
+     * @public
+     */
+    this.addMinListener = function(listener)
+    {
+        if (!(listener instanceof Function)) {
+            throw 'Stopwatch.addListener called with non-Function';
+        }
+        minListeners.push(listener);
+        return this;
+    };
+    
+    /**
+     * Check if there are some minute listeners
+     * 
+     * @returns Boolean
+     * @public
+     */
+    this.hasMinListeners = function()
+    {
+        return (minListeners.length > 0);
+    };
+    
+    /**
+     * Get the hour listeners
+     * 
+     * @returns Array
+     * @public
+     */
+    this.getHourListeners = function()
+    {
+        return hourListeners;
+    };
+    
+    /**
+     * Add a hour listener
+     * 
+     * @param function
+     * @public
+     */
+    this.addHourListener = function(listener)
+    {
+        if (!(listener instanceof Function)) {
+            throw 'Stopwatch.addListener called with non-Function';
+        }
+        hourListeners.push(listener);
+        return this;
+    };
+    
+    /**
+     * Check if there are some hour listeners
+     * 
+     * @returns Boolean
+     * @public
+     */
+    this.hasHourListeners = function()
+    {
+        return (hourListeners.length > 0);
+    };
+    
     this.reset();
 }
 
 /*
- * Instances variables
- */
-
-/**
- * @type Object
- */
-Stopwatch.prototype._time = null;
-
-/**
- * @type Integer
- */
-Stopwatch.prototype._interval = null;
-
-/**
- * @type Array
- */
-Stopwatch.prototype._secListeners = [];
-/**
- * @type Array
- */
-Stopwatch.prototype._minListeners = [];
-/**
- * @type Array
- */
-Stopwatch.prototype._hourListeners = [];
-
-/*
  * Instances public methods
  */
-
-/**
- * Register a listener for when a second ticks over
- * 
- * @param Function listener Will be passed the elapsed time from getTime()
- * @throws Exception if something other than a Function is passed in
- * @public
- */
-Stopwatch.prototype.registerSecListener = function(listener)
-{
-    if (!(listener instanceof Function)) {
-        throw "Invalid argument: Stopwatch.registerSecListener() requires a callable function";
-    }
-    
-    this._secListeners.push(listener);
-};
-
-/**
- * Register a listener for when a minute ticks over
- * 
- * @param Function listener Will be passed the elapsed time from getTime()
- * @throws Exception if something other than a Function is passed in
- * @public
- */
-Stopwatch.prototype.registerMinListener = function(listener)
-{
-    if (!(listener instanceof Function)) {
-        throw "Invalid argument: Stopwatch.registerMinListener() requires a callable function";
-    }
-    
-    this._minListeners.push(listener);
-};
-
-/**
- * Register a listener for when a hour ticks over
- * 
- * @param Function listener Will be passed the elapsed time from getTime()
- * @throws Exception if something other than a Function is passed in
- * @public
- */
-Stopwatch.prototype.registerHourListener = function(listener)
-{
-    if (!(listener instanceof Function)) {
-        throw "Invalid argument: Stopwatch.registerHourListener() requires a callable function";
-    }
-    
-    this._hourListeners.push(listener);
-};
 
 /**
  * Start the clock
@@ -104,18 +221,19 @@ Stopwatch.prototype.registerHourListener = function(listener)
  */
 Stopwatch.prototype.start = function()
 {
-    if (this._interval) {
+    if (this.getInterval()) {
         return this;
     }
-    if (!this._time.sec) {
+    if (!this.getTime().sec) {
         this.reset();
     }
     var self = this;
-    this._interval = setInterval(function ()
+    var interval = setInterval(function ()
     {
         return self._tick();
     },
     1000);
+    this.setInterval(interval);
         
     return this;
 };
@@ -129,11 +247,11 @@ Stopwatch.prototype.start = function()
  */
 Stopwatch.prototype.stop = function(reset)
 {
-    if (!this._interval) {
+    if (!this.getInterval()) {
         return this;
     }
-    clearInterval(this._interval);
-    this._interval = null;
+    clearInterval(this.getInterval());
+    this.clearInterval();
     if (reset) {
         this.reset();
     }
@@ -149,11 +267,12 @@ Stopwatch.prototype.stop = function(reset)
  */
 Stopwatch.prototype.reset = function()
 {
-    this._time = {
+    var time = {
         "sec": 0,
-        "min": 0,
+        "min": 59,
         "hour": 0
     };
+    this.setTime(time);
     
     return this;
 };
@@ -182,7 +301,7 @@ Stopwatch.prototype.restart = function()
  */
 Stopwatch.prototype.getTime = function(round)
 {
-    var time = this._time;
+    var time = this.getTime();
     if (round) {
         time = this.roundTime(time, round);
     }
@@ -228,55 +347,58 @@ Stopwatch.prototype.roundTime = function(time, round)
  */
 Stopwatch.prototype.deductTime = function(time)
 {
+    var currTime = this.getTime();
     var secChanged = false;
     var minChanged = false;
     var hourChanged = false;
     
     if (time.sec) {
-        this._time.sec -= time.sec;
+        currTime.sec -= time.sec;
         secChanged = true;
         
-        if (this._time.sec < 0) {
-            if (this._time.min > 0) {
-                this._time.sec += 60;
-                this._time.min--;
+        if (currTime.sec < 0) {
+            if (currTime.min > 0) {
+                currTime.sec += 60;
+                currTime.min--;
                 minChanged = true;
             } else {
-                this._time.sec = 0;
+                currTime.sec = 0;
             }
         }
     }
     if (time.min) {
-        this._time.min -= time.min;
+        currTime.min -= time.min;
         minChanged = true;
         
-        if (this._time.min < 0) {
-            if (this._time.hour > 0) {
-                this._time.min += 60;
-                this._time.hour--;
+        if (currTime.min < 0) {
+            if (currTime.hour > 0) {
+                currTime.min += 60;
+                currTime.hour--;
                 hourChanged = true;
             } else {
-                this._time.min = 0;
+                currTime.min = 0;
             }
         }        
     }
     if (time.hour) {
-        this._time.hour -= time.hour;
+        currTime.hour -= time.hour;
         hourChanged = true;
         
-        if (this._time.hour < 0) {
-            this._time.hour = 0;
+        if (currTime.hour < 0) {
+            currTime.hour = 0;
         }
     }
     
+    this.setTime(currTime);
+    
     // Listeners
-    if (secChanged && this._secListeners.length > 0) {
+    if (secChanged) {
         this._notifySecListeners();
     }
-    if (minChanged && this._minListeners.length > 0) {
+    if (minChanged) {
         this._notifyMinListeners();
     }
-    if (hourChanged && this._hourListeners.length > 0) {
+    if (hourChanged) {
         this._notifyHourListeners();
     }
     
@@ -295,36 +417,39 @@ Stopwatch.prototype.deductTime = function(time)
  */
 Stopwatch.prototype._tick = function()
 {
+    var currTime = this.getTime();
     var secChanged = false;
     var minChanged = false;
     var hourChanged = false;
     
     // Seconds
-    this._time.sec++;
+    currTime.sec++;
     secChanged = true;
     
     // Minutes
-    if (this._time.sec == 60) {
-        this._time.sec = 0;
-        this._time.min++;
+    if (currTime.sec == 60) {
+        currTime.sec = 0;
+        currTime.min++;
         minChanged = true;
     }
     
     // Hours
-    if (this._time.min == 60) {
-        this._time.min = 0;
-        this._time.hour++;
+    if (currTime.min == 60) {
+        currTime.min = 0;
+        currTime.hour++;
         hourChanged = true;
     }
     
+    this.setTime(currTime);
+    
     // Listeners
-    if (secChanged && this._secListeners.length > 0) {
+    if (secChanged) {
         this._notifySecListeners();
     }
-    if (minChanged && this._minListeners.length > 0) {
+    if (minChanged) {
         this._notifyMinListeners();
     }
-    if (hourChanged && this._hourListeners.length > 0) {
+    if (hourChanged) {
         this._notifyHourListeners();
     }
 };
@@ -336,9 +461,10 @@ Stopwatch.prototype._tick = function()
  */
 Stopwatch.prototype._notifySecListeners = function()
 {
-    if (this._secListeners.length > 0) {
-        for (var count in this._secListeners) {
-            var listener = this._secListeners[count];
+    if (this.hasSecListeners()) {
+        var listeners = this.getSecListeners();
+        for (var count in listeners) {
+            var listener = listeners[count];
             listener(this.getTime());
         }
     }
@@ -351,9 +477,10 @@ Stopwatch.prototype._notifySecListeners = function()
  */
 Stopwatch.prototype._notifyMinListeners = function()
 {
-    if (this._minListeners.length > 0) {
-        for (var count in this._minListeners) {
-            var listener = this._minListeners[count];
+    if (this.hasMinListeners()) {
+        var listeners = this.getMinListeners();
+        for (var count in listeners) {
+            var listener = listeners[count];
             listener(this.getTime());
         }
     }
@@ -366,9 +493,10 @@ Stopwatch.prototype._notifyMinListeners = function()
  */
 Stopwatch.prototype._notifyHourListeners = function()
 {
-    if (this._hourListeners.length > 0) {
-        for (var count in this._hourListeners) {
-            var listener = this._hourListeners[count];
+    if (this.hasHourListeners()) {
+        var listeners = this.getHourListeners();
+        for (var count in listeners) {
+            var listener = listeners[count];
             listener(this.getTime());
         }
     }

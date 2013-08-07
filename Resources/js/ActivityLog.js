@@ -15,7 +15,20 @@
  */
 function ActivityLog(maxLogs)
 {
-    this._maxLogs = maxLogs;
+    /**
+     * @type Integer
+     */
+    var maxLogs = maxLogs;
+    
+    /**
+     * Get the maximum number of log entries
+     * 
+     * @returns Integer
+     */
+    this.getMaxLogs = function()
+    {
+        return maxLogs;
+    };
 }
 
 // Alias
@@ -69,7 +82,7 @@ AL.prototype.log = function(message, level)
     userLog.css({backgroundColor: colour})
             .show()
             .animate({backgroundColor: 'none'}, 1500);
-    if ($('.userLog').length > this._maxLogs) {
+    if ($('.userLog').length > this.getMaxLogs()) {
         $('#userLogContainer div:last-child').remove();
     }
 };

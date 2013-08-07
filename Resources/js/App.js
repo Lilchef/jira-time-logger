@@ -1095,7 +1095,7 @@ App.prototype._loadMain = function()
     this._populateSubTaskTypes();
     
     this.resetLoggedTotal();
-    this.getStopwatch().registerMinListener(this.updateTime);
+    this.getStopwatch().addMinListener(this.updateTime);
     this.resetTime();
 };
 
