@@ -78,7 +78,7 @@ AL.prototype.log = function(message, level)
     var dateTimeLogged = now.toLocaleString();
     
     var userLog = $('<div class="userLog '+level.toLowerCase()+'" title="'+dateTimeLogged+'">'+level+': '+message+'</div>');
-    $('#userLogContainer').prepend(userLog);
+    $('#userLogContainer').prepend(userLog).scrollTop(0);
     userLog.css({backgroundColor: colour})
             .show()
             .animate({backgroundColor: 'none'}, 1500);
