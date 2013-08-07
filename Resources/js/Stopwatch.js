@@ -269,7 +269,7 @@ Stopwatch.prototype.reset = function()
 {
     var time = {
         "sec": 0,
-        "min": 59,
+        "min": 0,
         "hour": 0
     };
     this.setTime(time);
