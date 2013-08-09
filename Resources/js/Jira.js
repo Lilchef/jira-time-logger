@@ -238,7 +238,7 @@ Jira.prototype.testConnection = function()
  * @return Object Issue/subtask types keyed by ID or null on failure
  * @public
  */
-Jira.prototype.getIssueTypes = function(subTasks)
+Jira.prototype.fetchIssueTypes = function(subTasks)
 {
     var issueTypes = this.getIssueTypes();
     if (!issueTypes || issueTypes.length == 0) {
@@ -289,7 +289,7 @@ Jira.prototype.getIssueTypes = function(subTasks)
  */
 Jira.prototype.getSubTaskTypes = function()
 {
-    return this.getIssueTypes(Jira.TYPES_INC_SUBTASKS_ONLY);
+    return this.fetchIssueTypes(Jira.TYPES_INC_SUBTASKS_ONLY);
 };
 
 /**
