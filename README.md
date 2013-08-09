@@ -28,8 +28,20 @@ Currently there is only a build for Linux systems (tested on Ubuntu 12.04). Ther
 * Help it unpack: `cd /path/of/choice/JiraTimeLogger && tar xzf /path/to/JIRA\ Time\ Logger-<version>.tgz`
 * Then run it: `./JIRA\ Time\ Logger`
 
+When you first run the app it will prompt you to configure it. See the [usage instructions](https://github.com/Lilchef/jira-time-logger/wiki/Usage-instructions) for more on this.
+
+## Usage ##
+See the [usage instructions](https://github.com/Lilchef/jira-time-logger/wiki/Usage-instructions).
+
+## Known Issues ##
+* When clicking 'Reconfigure' then submitting you are taken back to the main screen but it will have reset the display of total time logged and the activity log
+
+## Upcoming Features ##
+* JTL will pop-up to remind you to log time every so often
+
 ## Author & License ##
 Copyright: Aaron Baker, 2013. JIRA and the JIRA logo &copy; Atlassian, Inc.
 
 This work is licensed under a [Creative Commons Attribution-ShareAlike 3.0 Unported License](http://creativecommons.org/licenses/by-sa/3.0/)
 
+This project is in no way affiliated with or supported by Atlassian.
