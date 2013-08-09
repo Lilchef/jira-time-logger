@@ -3,10 +3,10 @@
 <!-- These values are edited/maintained by TideSDK Developer -->
 <id>uk.co.aaronbaker.jtl</id>
 <name>JIRA Time Logger</name>
-<version>0.4</version>
+<version>1.0</version>
 <publisher>Aaron Baker</publisher>
 <url>http://www.aaronbaker.co.uk</url>
-<icon>default_app_logo.png</icon>
+<icon>jira_time_logger_logo.png</icon>
 <copyright>2013 by Aaron Baker</copyright>
 <!-- Window Definition - these values can be edited -->
 <window>
