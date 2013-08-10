@@ -21,7 +21,7 @@ I wrote this app to suit a very specific workflow (whereby subtasks of specific 
 Currently there is only a build for Linux systems (tested on Ubuntu 12.04). There may be a Windows version at some point (ask if you want one).
 
 ### Linux ###
-* Download the tarball
+* Download the `JIRA Time Logger-[ver].tgz` file
 * There is one dependency to install: `sudo apt-get install libjpeg62-dev`
 * JTL uses [TideSDK](http://www.tidesdk.org/) which needs a place to store some config files: `mkdir ~/.tidesdk`
 * JTL needs somewhere to live: `mkdir /path/of/choice/JiraTimeLogger`
