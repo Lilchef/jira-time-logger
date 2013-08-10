@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Configuration</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <link rel="stylesheet" type="text/css" href="gumby/css/gumby.css" />
+        <link rel="stylesheet" type="text/css" href="css/app.css" />
+        <script type="text/javascript" src="js/modernizr.min.js"></script>
+    </head>
+    <body>
+        <div class="row">
+            <div class="six columns text-center">
+                <h3>JIRA Time Logger</h3>
+            </div>
+        </div>
+        <div class="row">
+            <div class="six columns text-center">
+                <h4>Configuration</h4>
+            </div>
+        </div>
+        <div class="row" id="configError">
+            &nbsp;
+        </div>
+        
+        <form id="configForm" method="POST">
+            <div class="row">
+                <ul class="three columns">
+                    <li class="field">
+                        <label for="urlBase">JIRA URL <sup>*</sup></label>
+                    </li>
+                    <li class="field">
+                        <label for="username">Username <sup>*</sup></label> 
+                    </li>
+                    <li class="field">
+                        <label for="password">Password <sup>*</sup></label>
+                    </li>
+                    <li class="field">
+                        <label for="subTaskTypeExclusions">Subtask types to exclude (Comma-separated. Case-sensitive)</label>
+                    </li>
+                </ul>
+                <ul class="three columns">
+                    <li class="field">
+                        <input type="text" id="urlBase" name="urlBase" class="text input" placeholder="Your JIRA install's URL" />
+                    </li>
+                    <li class="field">
+                        <input type="text" id="username" name="username" class="text input" placeholder="Your JIRA username" />
+                    </li>
+                    <li class="field">
+                        <input type="password" id="password" name="password" class="password input" placeholder="Your JIRA password" />
+                    </li>
+                    <li class="field">
+                        <textarea id="subTaskTypeExclusions" name="subTaskTypeExclusions" class="textarea input" placeholder="e.g. Sub-task, Reviewing"></textarea>
+                    </li>
+                </ul>
+            </div>
+            <div class="row">
+                <div class="six columns text-center">
+                    <div class="medium rounded pretty success btn icon-left icon-check">
+                        <input type="submit" id="configureButton" value="Submit" />
+                    </div>
+                </div>
+            </div>
+        </form>
+        
+        <script type="text/javascript" src="js/jquery.min.js"></script>
+        <script type="text/javascript" src="js/jquery.base64.min.js"></script>
+        <script type="text/javascript" src="js/jquery.color.min.js"></script>
+        <script type="text/javascript" src="gumby/js/libs/gumby.min.js"></script>
+        <script type="text/javascript" src="js/ActivityLog.js"></script>
+        <script type="text/javascript" src="js/StopwatchTime.js"></script>
+        <script type="text/javascript" src="js/Stopwatch.js"></script>
+        <script type="text/javascript" src="js/Jira.js"></script>
+        <script type="text/javascript" src="js/Config.js"></script>
+        <script type="text/javascript" src="js/App.js"></script>
+        <script type="text/javascript">
+            $(document).ready(function() {
+                try {
+//                    var window = Ti.UI.currentWindow;
+//                    if (window.getURL().indexOf('err=1') > 0) {
+//                        $('#configError').text('There seems to be a problem with your config, please check it carefully');
+//                    }
+                    
+                    App.getInstance().getConfig().populateForm();
+                    App.getInstance().getConfig().registerSubmitListener(function() {
+                        App.getInstance().load();
+                    });
+                } catch (exception) {
+                    console.log(exception);
+                    alert('A serious error ocurrred, the application will have to close');
+                    Ti.App.exit();
+                }
+            });
+        </script>
+    </body>
+</html>
