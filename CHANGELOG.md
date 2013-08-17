@@ -1,4 +1,8 @@
 # Changelog #
+## 1.0 ##
+### Bug fixes ###
+* Subtask types are now correctly pulled in again
+
 ## 0.4 Beta ##
 ### Bug fixes ###
 * When more time is logged manually then has elapsed the time now correctly resets to zero

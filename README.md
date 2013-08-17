@@ -18,26 +18,33 @@ I wrote this app to suit a very specific workflow (whereby subtasks of specific 
     + Hover over a log entry to see the date and time it was made
 
 ## Installation ##
-Currently there is only a build for Linux systems (tested on Ubuntu 12.04). There may be a Windows version at some point (ask if you want one).
-
 ### Linux ###
-* Download the latest `JIRA Time Logger-[ver].tgz` file from [here](https://drive.google.com/folderview?id=0Byl3EQSCTvAZLVJ4QzVmU3J6dUU&usp=sharing)
+* Download the latest `JIRA Time Logger-[ver].tgz` file from the [releases section](https://github.com/Lilchef/jira-time-logger/releases)
 * There is one dependency to install: `sudo apt-get install libjpeg62-dev`
 * JTL uses [TideSDK](http://www.tidesdk.org/) which needs a place to store some config files: `mkdir ~/.tidesdk`
 * JTL needs somewhere to live: `mkdir /path/of/choice/JiraTimeLogger`
 * Help it unpack: `cd /path/of/choice/JiraTimeLogger && tar xzf /path/to/JIRA\ Time\ Logger-<version>.tgz`
 * Then run it: `./JIRA\ Time\ Logger`
 
+### OSX ###
+* Download the latest `JIRA Time Logger-[ver].dmg` file from the [releases section](https://github.com/Lilchef/jira-time-logger/releases)
+* Open the DMG and drag the JIRA Time Logger app to your Applications folder
+* Go to your Applications folder and double-click the JIRA Time Logger app
+
+### Windows ###
+Coming soon.
+
+### All ###
 When you first run the app it will prompt you to configure it. See the [usage instructions](https://github.com/Lilchef/jira-time-logger/wiki/Usage-instructions) for more on this.
 
 ## Usage ##
 See the [usage instructions](https://github.com/Lilchef/jira-time-logger/wiki/Usage-instructions).
 
 ## Known Issues ##
-* When clicking 'Reconfigure' then submitting you are taken back to the main screen but it will have reset the display of total time logged and the activity log
+See [bugs in the issues section](https://github.com/Lilchef/jira-time-logger/issues?labels=bug&page=1&state=open)
 
 ## Upcoming Features ##
-* JTL will pop-up to remind you to log time every so often
+See [enhancements in the issues section](https://github.com/Lilchef/jira-time-logger/issues?labels=enhancement&page=1&state=open)
 
 ## Author & License ##
 Copyright: Aaron Baker, 2013. JIRA and the JIRA logo &copy; Atlassian, Inc.
