@@ -1,5 +1,9 @@
 # JIRA Time Logger #
 
+**NOTE: this application is deprecated. It can no longer connect to JIRA. Use the [Chrome Extension](https://github.com/Lilchef/jira-time-logger-chrome) version instead**
+
+
+
 This is a little app to help you log your time in [Atlassian's JIRA](https://www.atlassian.com/software/jira) software.
 
 It acts as a stopwatch to monitor the length of time you've worked on something and then allows you to quickly log that time to JIRA.
